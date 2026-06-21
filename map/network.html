@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>论文关系网</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="page-network">
+  <main class="detail-shell">
+    <section class="detail-card network-page-card">
+      <a class="back-link" href="index.html">← 返回路线图首页</a>
+      <div class="network-head network-head-page">
+        <div>
+          <p class="eyebrow">Paper Network</p>
+          <h1>论文关系网</h1>
+          <p class="network-copy">把不同论文之间的继承关系、同方向演进和跨方向启发集中在一页里。你可以按方向筛选、点击节点查看说明，再进入论文详情页。</p>
+        </div>
+        <div class="network-side">
+          <div id="network-filters" class="network-filters"></div>
+          <div class="network-legend">
+            <span><i class="legend-line"></i>同类演进（早 → 晚）</span>
+            <span><i class="legend-line dashed"></i>跨类启发（早 → 晚）</span>
+            <span><i class="legend-dot"></i>论文节点</span>
+          </div>
+        </div>
+      </div>
+      <div class="network-layout">
+        <div class="network-canvas-wrap">
+          <div class="network-toolbar">
+            <button id="zoom-in" class="network-tool-btn" type="button" aria-label="放大">+</button>
+            <button id="zoom-out" class="network-tool-btn" type="button" aria-label="缩小">-</button>
+            <button id="zoom-reset" class="network-tool-btn" type="button">重置</button>
+          </div>
+          <svg id="paper-network" class="network-canvas" viewBox="0 0 1120 680" role="img" aria-label="论文关系网络图"></svg>
+        </div>
+        <aside id="network-detail" class="network-detail"></aside>
+      </div>
+    </section>
+  </main>
+  <script src="data.js"></script>
+  <script src="network.js"></script>
+</body>
+</html>
