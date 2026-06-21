@@ -1,0 +1,636 @@
+# Knowledge Map — 论文知识地图 + 多 Agent 论文分析系统
+
+基于 **FastAPI + LangGraph + React** 构建的前后端分离论文分析平台。上传 PDF 后，系统自动完成元数据提取、联网校验、分类、创新点/局限性分析、反思修复、关系图构建等全流程，并以知识地图的形式可视化展示。
+
+## 目录
+
+- [功能特性](#功能特性)
+- [技术栈](#技术栈)
+- [项目架构](#项目架构)
+- [环境要求](#环境要求)
+- [快速启动](#快速启动)
+- [环境变量配置](#环境变量配置)
+- [数据结构手册](#数据结构手册)
+  - [papers.json 字段说明](#papersjson-字段说明)
+  - [analysis JSON 字段说明](#analysis-json-字段说明)
+  - [论文存储位置](#论文存储位置)
+- [领域适配指南](#领域适配指南)
+  - [为什么需要适配](#为什么需要适配)
+  - [需要修改哪些文件](#需要修改哪些文件)
+  - [修改分类定义](#修改分类定义)
+  - [修改分类 Agent 提示词](#修改分类-agent-提示词)
+  - [创建对应的论文文件夹](#创建对应的论文文件夹)
+  - [完整示例：计算机视觉领域](#完整示例计算机视觉领域)
+  - [适配检查清单](#适配检查清单)
+- [LangGraph 工作流](#langgraph-工作流)
+- [前端使用说明](#前端使用说明)
+- [常见问题](#常见问题)
+
+---
+
+## 功能特性
+
+- **PDF 自动解析**：支持 MinerU / PyMuPDF / pypdf，扫描版 PDF 可启用 Tesseract OCR
+- **多源元数据校验**：本地 PDF 提取 → Crossref / Semantic Scholar / arXiv 联网检索 → LLM 比对校验
+- **智能分类**：基于 LLM 将论文自动归入预定义研究方向
+- **创新点 & 局限性分析**：多 Agent 协作，自动生成结构化分析结果
+- **反思 & 修复机制**：分析结果经 LLM 自检，不合格自动重试（最多 2 次）
+- **论文关系图**：自动构建引用关系和同类别演进关系，可视化展示
+- **可配置 LLM**：支持 OpenAI 和 Anthropic，通过前端界面设置 API Key
+- **Redis 任务队列**：异步处理上传任务，实时查询进度
+
+---
+
+## 技术栈
+
+| 层级 | 技术 |
+|------|------|
+| 前端 | React 18 + TypeScript + Vite 5 + React Router 6 |
+| 后端 | FastAPI + LangGraph + Pydantic v2 |
+| 存储 | Redis 7（任务队列/缓存）+ 本地 JSON（论文数据） |
+| 文档处理 | MinerU / PyMuPDF / pypdf / Tesseract OCR |
+| LLM | OpenAI API / Anthropic API（通过统一 Provider 调用） |
+| 外部检索 | arXiv API / Crossref API / Semantic Scholar API |
+
+---
+
+## 项目架构
+
+```text
+Knowledge-Map/
+├── front/                          # React 前端
+│   ├── src/
+│   │   ├── api/                    # API 调用封装
+│   │   ├── components/             # UI 组件
+│   │   ├── pages/                  # 页面路由
+│   │   ├── styles/                 # 样式文件
+│   │   └── types/                  # TypeScript 类型定义
+│   ├── package.json
+│   └── vite.config.ts
+├── src/                            # FastAPI 后端
+│   ├── main.py                     # FastAPI 应用入口
+│   ├── config.py                   # 全局配置（路径、分类定义）★ 领域适配核心文件
+│   ├── schemas.py                  # Pydantic 数据模型
+│   ├── agents/                     # LangGraph Agent 定义
+│   │   ├── graph.py                # 工作流编排
+│   │   ├── classify_agent.py       # 论文分类 Agent ★ 领域适配需修改提示词
+│   │   ├── innovation_agent.py     # 创新点分析 Agent
+│   │   ├── limitation_agent.py     # 局限性分析 Agent
+│   │   ├── reflection_agent.py     # 反思校验 Agent
+│   │   └── source_agent.py         # 来源检索 Agent
+│   ├── llm/                        # LLM 调用层
+│   │   ├── provider.py             # 统一 LLM Provider（OpenAI/Anthropic）
+│   │   └── settings.py             # 模型配置管理
+│   ├── services/                   # 业务逻辑
+│   │   ├── pdf_loader.py           # PDF 文本提取
+│   │   ├── metadata_extractor.py   # 元数据本地提取
+│   │   ├── paper_metadata_pipeline.py  # 元数据增强链路
+│   │   ├── external_paper_lookup.py    # 联网检索
+│   │   ├── paper_file_manager.py       # 论文文件管理
+│   │   ├── paper_graph_builder.py      # 关系图构建
+│   │   └── paper_record_cleaner.py     # 记录清洗
+│   ├── database/                   # 数据存储层
+│   │   ├── json_store.py           # JSON 文件读写
+│   │   ├── kv.py                   # Redis 键值存储封装
+│   │   └── redis_client.py         # Redis 客户端
+│   ├── tools/                      # 辅助工具
+│   │   └── repair_metadata_records.py
+│   └── data/                       # 运行时数据
+│       ├── papers.json             # 论文集合索引
+│       └── analysis/               # 每篇论文的分析结果
+├── paper/                          # 论文 PDF 存储（按分类组织）
+├── uploads/                        # 上传暂存目录
+├── docker-compose.yml              # Redis 编排
+├── requirements.txt                # Python 依赖
+├── .env.example                    # 环境变量示例
+└── README.md
+```
+
+---
+
+## 环境要求
+
+- **Python** >= 3.10
+- **Node.js** >= 18
+- **Docker**（用于运行 Redis，可选）
+- **Tesseract OCR**（可选，用于扫描版 PDF）
+
+---
+
+## 快速启动
+
+### 1. 启动 Redis
+
+```bash
+docker compose up -d
+```
+
+### 2. 启动后端
+
+```bash
+# 安装依赖
+pip install -r requirements.txt
+
+# 配置环境变量
+cp .env.example .env
+# 编辑 .env 填入 API Key 等配置
+
+# 启动服务
+uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+### 3. 启动前端
+
+```bash
+cd front
+npm install
+npm run dev
+```
+
+默认访问地址：
+- 前端：`http://localhost:5173`
+- 后端 API：`http://localhost:8000`
+- API 文档：`http://localhost:8000/docs`
+
+---
+
+## 环境变量配置
+
+复制 `.env.example` 为 `.env` 并填写：
+
+```bash
+# LLM 配置
+OPENAI_API_KEY=sk-xxx              # OpenAI API Key（二选一）
+ANTHROPIC_API_KEY=sk-ant-xxx       # Anthropic API Key（二选一）
+LLM_PROVIDER=openai                # openai 或 anthropic
+LLM_BASE_URL=https://api.openai.com/v1
+LLM_MODEL=gpt-4o-mini
+LLM_TEMPERATURE=0.2
+LLM_MAX_TOKENS=4096
+
+# Redis
+REDIS_URL=redis://localhost:6379/0
+
+# OCR（可选）
+OCR_ENABLED=true
+OCR_MIN_TEXT_LENGTH=500
+TESSERACT_CMD=C:\Program Files\Tesseract-OCR\tesseract.exe
+
+# PDF 解析器
+PDF_PARSER_BACKEND=auto            # auto / mineru / pymupdf
+MINERU_CLI_COMMAND=mineru
+MINERU_METHOD=auto
+MINERU_BACKEND=pipeline
+MINERU_EFFORT=medium
+MINERU_LANG=ch
+
+# MinerU 远程 API（可选）
+MINERU_API_BASE_URL=https://mineru.net
+MINERU_API_TOKEN=
+MINERU_API_TIMEOUT=600
+```
+
+---
+
+## 数据结构手册
+
+### papers.json 字段说明
+
+`src/data/papers.json` 是论文集合的主索引文件，顶层结构：
+
+```json
+{
+  "categories": [...],
+  "papers": [...]
+}
+```
+
+#### categories 数组元素
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `id` | string | 分类唯一标识，如 `optimization`、`personalization` |
+| `name` | string | 分类中文名称，如"基础联邦优化" |
+| `folder` | string | 对应 `paper/` 下的子文件夹名，如 `01_基础联邦优化` |
+| `why` | string | 该分类的研究动机 |
+| `advantages` | string | 该方向的优势 |
+| `disadvantages` | string | 该方向的劣势 |
+
+#### papers 数组元素
+
+| 字段 | 类型 | 必有 | 说明 |
+|------|------|------|------|
+| `id` | string | 是 | 论文唯一标识，由文件名自动生成（如 `fedavg`、`a93e13033a934717852c1182b8d6fd88-fedprox`） |
+| `short` | string | 是 | 论文简称/缩写（如 `FedAvg`、`FedProx`），用于图谱节点展示 |
+| `title` | string | 是 | 论文完整标题 |
+| `year` | int \| null | 否 | 发表年份 |
+| `authors` | string[] | 是 | 作者列表 |
+| `first_author` | string | 是 | 第一作者 |
+| `venue` | string \| null | 否 | 发表会议/期刊（如 `AISTATS 2017`、`arXiv`） |
+| `abstract` | string | 是 | 论文摘要 |
+| `summary` | string | 是 | 系统生成的中文总结（1-3 句话概括论文贡献） |
+| `idea` | string | 是 | 核心思想/方法（1-2 句，仅描述机制，不含结果性表述） |
+| `categories` | string[] | 是 | 所属分类 ID 列表（通常只有一个） |
+| `source_path` | string | 是 | 论文 PDF 的存储路径（绝对路径或相对路径） |
+| `innovation` | string | 是 | 创新点总结描述 |
+| `innovation_points` | InnovationPoint[] | 是 | 结构化创新点列表（见下方子表） |
+| `flow_steps` | string[] | 是 | 方法流程步骤（有序列表） |
+| `applications` | string | 是 | 应用场景描述 |
+| `limitations` | string | 是 | 局限性总结描述 |
+| `limitation_points` | LimitationPoint[] | 是 | 结构化局限性列表（见下方子表） |
+| `citations` | CitationItem[] | 是 | 引用列表（见下方子表） |
+| `relationships` | RelationshipItem[] | 是 | 与其他论文的关系（见下方子表） |
+| `analysis_json_path` | string | 是 | 对应分析结果 JSON 文件路径（如 `src/data/analysis/fedavg.json`） |
+| `needs_human_review` | bool | 是 | 是否需要人工审核（反思重试 2 次仍未通过时为 `true`） |
+| `created_at` | datetime | 是 | 创建时间（ISO 8601） |
+| `updated_at` | datetime | 是 | 最后更新时间（ISO 8601） |
+| `venue_source` | string \| null | 否 | 元数据来源类型：`conference`、`journal`、`arxiv_id`、`crossref` 等 |
+| `doi` | string \| null | 否 | DOI 标识符 |
+| `arxiv_id` | string \| null | 否 | arXiv ID |
+| `source_url` | string \| null | 否 | 论文来源 URL |
+| `citation_text` | string \| null | 否 | 标准化引用文本 |
+| `bibtex` | string \| null | 否 | BibTeX 格式引用 |
+| `metadata_confidence` | float | 是 | 元数据置信度（0-1），越高表示元数据越可信 |
+| `metadata_source_method` | string \| null | 否 | 元数据获取方法（如 `crossref`、`arxiv_id`、`local_pdf`） |
+| `metadata_verification_notes` | string \| null | 否 | 元数据验证说明（如"标题、作者与 DOI 已按 Crossref 结果校正"） |
+| `source_candidates` | PaperSourceCandidate[] | 是 | 来源候选列表（见下方子表） |
+
+##### InnovationPoint（创新点）
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `point` | string | 创新点描述 |
+| `evidence` | string | 支持证据（来自论文原文的引用或描述） |
+| `confidence` | float | 置信度（0-1） |
+
+##### LimitationPoint（局限性点）
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `point` | string | 局限性描述 |
+| `evidence` | string | 支持证据 |
+| `type` | string | 类型：`paper_claimed`（论文自述）或 `inferred`（系统推断） |
+| `severity` | string | 严重程度：`low` / `medium` / `high` |
+
+##### CitationItem（引用项）
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `title` | string | 被引论文标题 |
+| `authors` | string[] | 被引论文作者列表 |
+| `year` | int \| null | 被引论文年份 |
+| `venue` | string \| null | 被引论文会议/期刊 |
+| `doi` | string \| null | 被引论文 DOI |
+
+##### RelationshipItem（关系项）
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `source` | string | 源论文 ID |
+| `target` | string | 目标论文 ID |
+| `type` | string | 关系类型：`citation`（引用关系）或 `same_category_evolution`（同类别时间演进） |
+| `reason` | string | 关系原因说明 |
+
+##### PaperSourceCandidate（来源候选）
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `provider` | string | 数据来源：`local_pdf`（本地 PDF 提取）、`crossref_title`（Crossref 标题检索）、`arxiv_id`（arXiv 检索）、`reference_lookup`（用户输入引用）等 |
+| `title` | string | 候选论文标题 |
+| `authors` | string[] | 候选论文作者 |
+| `abstract` | string | 候选论文摘要 |
+| `year` | int \| null | 候选论文年份 |
+| `venue` | string \| null | 候选论文会议/期刊 |
+| `doi` | string \| null | 候选论文 DOI |
+| `arxiv_id` | string \| null | 候选论文 arXiv ID |
+| `source_url` | string \| null | 候选论文来源 URL |
+| `citation_text` | string \| null | 标准化引用文本 |
+| `bibtex` | string \| null | BibTeX 格式 |
+| `confidence` | float | 候选匹配置信度（0-1） |
+| `reason` | string | 匹配原因说明（如"标题相似度 0.99，包含 DOI，作者数 3"） |
+
+---
+
+### analysis JSON 字段说明
+
+`src/data/analysis/{paper_id}.json` 是每篇论文的独立分析结果文件。其字段与 `papers.json` 中 `papers` 数组元素基本一致，但有以下差异：
+
+| 差异点 | 说明 |
+|--------|------|
+| 不包含 `relationships` 字段 | 关系数据仅维护在 `papers.json` 主索引中 |
+| 不包含 `source_candidates` 中的部分字段 | 部分精简版可能缺少 `citation_text`、`bibtex` |
+| `updated_at` 可能更早 | 分析 JSON 在保存时生成，后续通过 `PATCH` 更新的是 `papers.json` |
+
+完整的 analysis JSON 字段列表：
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `id` | string | 论文唯一标识 |
+| `short` | string | 论文简称 |
+| `title` | string | 论文标题 |
+| `year` | int \| null | 发表年份 |
+| `authors` | string[] | 作者列表 |
+| `first_author` | string | 第一作者 |
+| `venue` | string \| null | 会议/期刊 |
+| `abstract` | string | 摘要 |
+| `summary` | string | 中文总结 |
+| `idea` | string | 核心思想 |
+| `categories` | string[] | 分类 ID 列表 |
+| `source_path` | string | PDF 路径 |
+| `innovation` | string | 创新点描述 |
+| `innovation_points` | InnovationPoint[] | 结构化创新点 |
+| `flow_steps` | string[] | 方法流程 |
+| `applications` | string | 应用场景 |
+| `limitations` | string | 局限性描述 |
+| `limitation_points` | LimitationPoint[] | 结构化局限性 |
+| `citations` | CitationItem[] | 引用列表 |
+| `analysis_json_path` | string | 自身文件路径 |
+| `needs_human_review` | bool | 是否需要人工审核 |
+| `created_at` | datetime | 创建时间 |
+| `updated_at` | datetime | 更新时间 |
+| `venue_source` | string \| null | 元数据来源类型 |
+| `doi` | string \| null | DOI |
+| `arxiv_id` | string \| null | arXiv ID |
+| `source_url` | string \| null | 来源 URL |
+
+---
+
+### 论文存储位置
+
+论文 PDF 文件按分类存储在 `paper/` 目录下：
+
+```text
+paper/
+├── 01_基础联邦优化/
+│   ├── fedavg.pdf
+│   ├── a93e13033a934717852c1182b8d6fd88-fedprox.pdf
+│   └── ...
+├── 02_个性化联邦学习/
+├── 03_知识蒸馏与异构联邦/
+├── 04_图联邦学习/
+├── 05_生成式与扩散联邦/
+├── 06_联邦提示学习与基础模型/
+├── 07_系统优化与应用部署/
+├── 08_综述_公平性_背景理论/
+└── 其他/
+```
+
+- 上传的 PDF 先暂存在 `uploads/` 目录
+- 分类完成后自动移动到 `paper/{分类文件夹}/` 下
+- 文件名格式：`{paper_id}.pdf`（paper_id 由系统自动生成）
+- `source_path` 字段记录了论文 PDF 的最终存储路径
+
+---
+
+## 领域适配指南
+
+本项目默认配置为**联邦学习**领域的论文分析。如果你的研究方向不同（如计算机视觉、自然语言处理、强化学习等），需要修改以下内容才能正常使用。
+
+### 为什么需要适配
+
+系统中有两处硬编码了联邦学习领域的知识：
+
+1. **分类定义**（`src/config.py`）：`CATEGORY_DEFINITIONS` 列表定义了 9 个联邦学习研究方向，分类 Agent 会将论文归入这些方向
+2. **分类 Agent 提示词**（`src/agents/classify_agent.py`）：系统提示词写死了"你是联邦学习论文分类助手"
+
+如果不修改，非联邦学习领域的论文会被错误分类或全部落入"其他"类别。
+
+### 需要修改哪些文件
+
+| 文件 | 修改内容 | 优先级 |
+|------|----------|--------|
+| `src/config.py` | 修改 `CATEGORY_DEFINITIONS` 列表 | 必须 |
+| `src/agents/classify_agent.py` | 修改系统提示词中的领域描述 | 必须 |
+| `paper/` 目录 | 创建与新分类对应的子文件夹 | 必须（系统会自动创建，但建议提前规划） |
+
+### 修改分类定义
+
+打开 `src/config.py`，找到 `CATEGORY_DEFINITIONS` 列表（约第 34-107 行），将其中的 `CategoryDefinition` 替换为你所在领域的研究方向。
+
+每个分类需要填写 6 个字段：
+
+```python
+CategoryDefinition(
+    id="detection",                    # 英文标识，用于 JSON 和 URL
+    name="目标检测",                    # 中文名称，用于前端显示
+    folder="01_目标检测",               # 文件夹名，paper/ 下的子目录
+    why="目标检测是计算机视觉的基础任务...",  # 为什么这个方向重要
+    advantages="...",                   # 该方向的优势
+    disadvantages="...",                # 该方向的劣势
+),
+```
+
+**注意事项**：
+- `id` 必须是英文小写，用下划线分隔（如 `object_detection`、`image_segmentation`）
+- `folder` 建议用数字前缀排序（如 `01_目标检测`、`02_图像分割`）
+- 保留 `other` 分类作为兜底，用于无法归类的论文
+- `why`、`advantages`、`disadvantages` 会被 LLM 用于理解分类逻辑，尽量写清楚
+
+### 修改分类 Agent 提示词
+
+打开 `src/agents/classify_agent.py`，找到第 14 行的系统提示词：
+
+```python
+"你是联邦学习论文分类助手。只能返回 JSON，不要解释。",
+```
+
+将其修改为你所在领域的描述，例如：
+
+```python
+"你是计算机视觉论文分类助手。只能返回 JSON，不要解释。",
+```
+
+这个提示词会影响分类 Agent 的行为，让它以你领域的视角来理解论文。
+
+### 创建对应的论文文件夹
+
+系统启动时会根据 `CATEGORY_DEFINITIONS` 中的 `folder` 字段自动创建文件夹。但建议提前在 `paper/` 下手动创建，以便整理已有论文。
+
+### 完整示例：计算机视觉领域
+
+以下是一个将系统适配为**计算机视觉**领域的完整示例。
+
+**修改 `src/config.py`**：
+
+```python
+CATEGORY_DEFINITIONS: list[CategoryDefinition] = [
+    CategoryDefinition(
+        id="detection",
+        name="目标检测",
+        folder="01_目标检测",
+        why="目标检测是视觉感知的核心任务，广泛应用于自动驾驶、安防监控、工业质检等场景。",
+        advantages="端到端训练成熟，工业落地案例丰富。",
+        disadvantages="小目标和密集场景下性能仍有瓶颈。",
+    ),
+    CategoryDefinition(
+        id="segmentation",
+        name="图像分割",
+        folder="02_图像分割",
+        why="像素级理解是精细化视觉任务的基础，包括语义分割、实例分割和全景分割。",
+        advantages="提供最细粒度的空间理解能力。",
+        disadvantages="标注成本极高，计算开销大。",
+    ),
+    CategoryDefinition(
+        id="generation",
+        name="图像生成与编辑",
+        folder="03_图像生成与编辑",
+        why="生成式模型（GAN、Diffusion）推动了图像合成、超分辨率、风格迁移等方向。",
+        advantages="创造力强，应用场景广泛。",
+        disadvantages="评估标准主观性强，训练不稳定。",
+    ),
+    CategoryDefinition(
+        id="3d",
+        name="三维视觉",
+        folder="04_三维视觉",
+        why="从2D到3D的跨越是机器人、AR/VR、数字孪生等应用的关键。",
+        advantages="空间信息更丰富，适合物理世界建模。",
+        disadvantages="数据采集和标注难度大。",
+    ),
+    CategoryDefinition(
+        id="video",
+        name="视频理解",
+        folder="05_视频理解",
+        why="时序建模是理解动态场景的核心，涵盖动作识别、视频描述、时序定位等。",
+        advantages="信息更丰富，能捕捉时空关系。",
+        disadvantages="计算量大，长视频建模困难。",
+    ),
+    CategoryDefinition(
+        id="multimodal",
+        name="多模态学习",
+        folder="06_多模态学习",
+        why="视觉-语言、视觉-音频等跨模态融合是通用人工智能的重要方向。",
+        advantages="能利用多种信息源，泛化能力更强。",
+        advantages="能利用多种信息源，泛化能力更强。",
+        disadvantages="模态对齐和融合策略复杂。",
+    ),
+    CategoryDefinition(
+        id="efficient",
+        name="高效网络与部署",
+        folder="07_高效网络与部署",
+        why="模型轻量化、量化、蒸馏是落地的关键环节。",
+        advantages="直接决定工程可行性。",
+        disadvantages="精度与效率的权衡难以兼顾。",
+    ),
+    CategoryDefinition(
+        id="survey",
+        name="综述与基准",
+        folder="08_综述与基准",
+        why="提供领域全景图和统一评估框架。",
+        advantages="帮助快速建立领域认知。",
+        disadvantages="不直接提出新方法。",
+    ),
+    CategoryDefinition(
+        id="other",
+        name="其他",
+        folder="其他",
+        why="用于暂时无法稳定归类的论文。",
+        advantages="避免误分，便于后续复审。",
+        disadvantages="可解释性略弱。",
+    ),
+]
+```
+
+**修改 `src/agents/classify_agent.py`**：
+
+```python
+"你是计算机视觉论文分类助手。只能返回 JSON，不要解释。",
+```
+
+**创建文件夹**：
+
+```bash
+mkdir -p paper/01_目标检测 paper/02_图像分割 paper/03_图像生成与编辑 \
+         paper/04_三维视觉 paper/05_视频理解 paper/06_多模态学习 \
+         paper/07_高效网络与部署 paper/08_综述与基准 paper/其他
+```
+
+### 适配检查清单
+
+修改完成后，按以下清单逐项确认：
+
+- [ ] `src/config.py` 中的 `CATEGORY_DEFINITIONS` 已替换为你的领域分类
+- [ ] `src/agents/classify_agent.py` 中的系统提示词已修改领域描述
+- [ ] `paper/` 下的子文件夹已创建（或确认系统启动时能自动创建）
+- [ ] `papers.json` 中的 `categories` 数组已更新（如果已有历史数据）
+- [ ] 重启后端服务使修改生效
+- [ ] 上传一篇测试论文，确认分类结果符合预期
+
+---
+
+## LangGraph 工作流
+
+论文上传后，系统通过 LangGraph 编排以下 13 个节点的有向图工作流：
+
+```
+parse_pdf → extract_metadata → source_agent → save_metadata_to_kv → classify_paper
+    → move_pdf_to_category → innovation_agent → limitation_agent → reflection_agent
+    → [repair ↔ reflection_agent]（最多重试 2 次）
+    → save_final_json → build_relationship → finish
+```
+
+| 节点 | 功能 |
+|------|------|
+| `parse_pdf` | 调用 PDF 解析器提取文本内容 |
+| `extract_metadata` | 从 PDF 文本中本地提取标题、作者、摘要等 |
+| `source_agent` | 联网检索（Crossref/Semantic Scholar/arXiv）并用 LLM 校验 |
+| `save_metadata_to_kv` | 将元数据缓存到 Redis |
+| `classify_paper` | LLM 将论文分类到预定义方向之一 |
+| `move_pdf_to_category` | 将 PDF 移动到对应分类文件夹 |
+| `innovation_agent` | LLM 分析创新点、核心思想、方法流程、应用场景 |
+| `limitation_agent` | LLM 分析局限性和不足 |
+| `reflection_agent` | LLM 检查分析结果质量，决定是否需要修复 |
+| `repair` | 根据反思反馈重新运行对应 Agent |
+| `save_final_json` | 保存分析结果到 `analysis/{paper_id}.json` 并更新 `papers.json` |
+| `build_relationship` | 构建论文间引用关系和演进关系 |
+| `finish` | 标记任务完成 |
+
+---
+
+## 前端使用说明
+
+1. **配置 API**：点击首页左上角"设置 API / 模型"按钮，选择 OpenAI 或 Anthropic，填入 API Key
+2. **上传论文**：点击"添加论文"，拖拽或选择 PDF 文件，同时填入 DOI / arXiv ID / 论文链接
+3. **查看进度**：上传后页面会显示当前处理阶段
+4. **浏览分析结果**：论文卡片展示标题、分类、创新点、局限性等
+5. **查看关系图**：点击进入关系图页面，可视化论文间的引用和演进关系
+
+---
+
+## 常见问题
+
+### 上传时报"请先配置 API / 模型"
+
+分类、创新点、局限性和反思节点都依赖 LLM。需先在首页设置模型配置。
+
+### 来源查询失败但任务没有完全失败
+
+来源查询设计为可降级节点。联网失败时自动回退到 PDF 本地提取结果。
+
+### 论文被放进"其他"
+
+当分类 Agent 置信度不足或内容跨方向过强时，会避免误分类并落入"其他"。如果是非联邦学习领域，需要先完成[领域适配](#领域适配指南)。
+
+### 扫描版 PDF 抽取效果不好
+
+两种改进路径：
+1. 启用 Tesseract OCR：`OCR_ENABLED=true`，配置 `TESSERACT_CMD` 路径
+2. 切换 MinerU：`PDF_PARSER_BACKEND=mineru`，配置 MinerU CLI 或远程 API
+
+### 如何使用 MinerU 远程精准解析 API
+
+```bash
+PDF_PARSER_BACKEND=mineru
+MINERU_API_BASE_URL=https://mineru.net
+MINERU_API_TOKEN=你的token
+MINERU_BACKEND=vlm
+MINERU_LANG=ch
+MINERU_API_TIMEOUT=600
+```
+
+调用流程：申请上传链接 → PUT 上传 PDF → 轮询结果 → 下载 zip 包。
+
+---
+
+## License
+
+MIT

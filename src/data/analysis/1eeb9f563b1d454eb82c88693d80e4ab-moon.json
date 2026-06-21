@@ -1,0 +1,297 @@
+{
+  "id": "1eeb9f563b1d454eb82c88693d80e4ab-moon",
+  "short": "MOON",
+  "title": "The Effect of Hyper-parameters in Model-contrastive Federated Learning Algorithm",
+  "year": 2023,
+  "authors": [
+    "Shen Chen",
+    "Zekai Lin",
+    "Jing Ma"
+  ],
+  "first_author": "Shen Chen",
+  "venue": "2023 IEEE International Conference on Sensors, Electronics and Computer Engineering (ICSECE)",
+  "abstract": "Federated learning enables all parties to perform data analysis and machine learning through the updated use of global models. The key difficulty in federation learning is data heterogeneity, and there are numerous studies that address this challenge but with poor results. The model-contrastive federated learning (MOON) algorithm described in this paper, an improvement on FedAvg, is a Model-level federation learning algorithm that is concise and efficient. The core idea is to train a local model by comparing between global models, which in turn updates the global model without the need for privacy data uploads while model-level training solves the non-HID problem. Widely tests are performed by the authors to confirm the MOON algorithm's efficacy. Contrasting various image databases, lr, $\\mu$ and other different parameters reveals that MOON outperforms other federal learning algorithms in all aspects such as learning accuracy, convergence speed and training time. It demonstrates its advanced and robustness.",
+  "summary": "模型对比联邦学习（MOON）算法，通过引入模型对比损失改进FedAvg，解决联邦学习中的数据异质（非IID）问题。在本地训练中使模型表示接近全局模型而远离历史本地模型，实现模型级对比，无需共享隐私数据。实验表明，MOON在多个数据集和不同超参数下均优于其他联邦学习算法，具有更高的准确率、更快的收敛速度和更短的训练时间，展现了优越性和鲁棒性。",
+  "idea": "在本地训练中同时计算当前模型、全局模型与上一轮本地模型的表示，并加入模型对比损失，使当前表示靠近全局表示、远离历史本地表示，从而稳定非IID场景下的本地更新方向。",
+  "categories": [
+    "optimization"
+  ],
+  "source_path": "D:\\48174\\projects\\Knowledge-Map\\paper\\01_基础联邦优化\\1eeb9f563b1d454eb82c88693d80e4ab-moon.pdf",
+  "innovation": "提出模型层面的对比学习联邦学习框架，通过对比损失规范本地训练，无需额外数据上传或复杂个性化训练，简洁高效地处理数据异质性。",
+  "innovation_points": [
+    {
+      "point": "提出模型对比损失（Model-Contrastive Loss）用于联邦学习本地训练",
+      "evidence": "文中公式(1)定义了ℓ_con，图2显示局部损失包含Model-Contrastive loss。",
+      "confidence": 0.9
+    },
+    {
+      "point": "利用三种表示（z, z_glob, z_prev）进行对比，使本地模型与全局模型一致，与历史模型分离",
+      "evidence": "MOON原理部分描述：goal of MOON is to keep Z close to Z_glob, Z far from Z_prev。",
+      "confidence": 0.9
+    },
+    {
+      "point": "在不共享隐私数据的前提下，通过模型级比较解决非IID问题",
+      "evidence": "摘要和引言提及model-level training solves the non-IID problem，不需要privacy data uploads。",
+      "confidence": 0.9
+    },
+    {
+      "point": "系统性地评估了超参数（如lr, μ）对MOON性能的影响，找到最优组合",
+      "evidence": "标题和摘要指出对比不同参数，显示MOON鲁棒性；实验部分研究不同参数组合。",
+      "confidence": 0.6
+    },
+    {
+      "point": "在CIFAR-10/100等数据集上全面超越FedAvg，收敛更快，准确率更高",
+      "evidence": "实验部分图3显示MOON最终准确率高于FedAvg，且达到相同准确率所需通信轮次更少。",
+      "confidence": 0.9
+    }
+  ],
+  "flow_steps": [
+    "服务器发送当前全局模型 w^{t} 至所有参与方",
+    "每个参与方下载全局模型并计算其表示 Z_glob = R_{w^{t}}(x)",
+    "参与方利用本地数据执行随机梯度下降，更新本地模型 w_i^{t}",
+    "同时计算本地模型表示 Z = R_{w_i^{t}}(x) 和上一轮模型表示 Z_prev = R_{w_i^{t-1}}(x)",
+    "构造模型对比损失 ℓ_con = -log( exp(sim(z,z_glob)/τ) / [exp(sim(z,z_glob)/τ) + exp(sim(z,z_prev)/τ)] )",
+    "总损失 = 交叉熵损失 + μ * ℓ_con，反向传播更新本地模型",
+    "本地训练完成后，参与方将更新后的本地模型上传至服务器",
+    "服务器聚合所有本地模型（如加权平均），生成新的全局模型 w^{t+1}",
+    "重复上述过程直至全局模型收敛"
+  ],
+  "applications": "医疗影像分析；金融数据挖掘；自然语言处理；推荐系统；边缘计算场景",
+  "limitations": "The study has several limitations. The experiments are limited to two datasets (CIFAR-10/100) and a single non-IID setting (Dirichlet β=0.5). Although the title suggests an analysis of hyper-parameters, no systematic investigation of learning rate (lr) or contrastive temperature (μ) is presented. The comparison is made only against FedAvg, ignoring other state-of-the-art non-IID federated learning methods. No measures of variability (e.g., standard deviation over multiple runs) are reported, making it difficult to assess the statistical significance of the results. These issues limit the generalizability and robustness claims of the MOON algorithm.",
+  "limitation_points": [
+    {
+      "point": "Limited dataset diversity",
+      "evidence": "Two datasets are used in our experiments, including CIFAR-10 & CIFAR-100.",
+      "type": "inferred",
+      "severity": "medium"
+    },
+    {
+      "point": "Lack of hyper-parameter sensitivity analysis",
+      "evidence": "The abstract claims to contrast lr, μ and other parameters, but the experimental section only presents accuracy curves for the default setting.",
+      "type": "inferred",
+      "severity": "high"
+    },
+    {
+      "point": "Insufficient baseline comparison",
+      "evidence": "Only FedAvg is compared; no other federated learning algorithms designed for non-IID data (e.g., FedProx, Scaffold) are evaluated.",
+      "type": "inferred",
+      "severity": "high"
+    },
+    {
+      "point": "No statistical variability reported",
+      "evidence": "The accuracy curves in Figure 3 do not include error bars or standard deviations across multiple runs.",
+      "type": "inferred",
+      "severity": "medium"
+    },
+    {
+      "point": "Single non-IID partition parameter",
+      "evidence": "Dir(β) is set to 0.5 by default; no experiments with other β values are shown.",
+      "type": "inferred",
+      "severity": "medium"
+    }
+  ],
+  "citations": [
+    {
+      "title": "Federated learning",
+      "authors": [
+        "Yang Q",
+        "Liu Y",
+        "Cheng Y",
+        "Kang Y",
+        "Chen T"
+      ],
+      "year": 2019,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Federated learning: Strategies for improving communication efficiency",
+      "authors": [
+        "H. B",
+        "F. X",
+        "A. T"
+      ],
+      "year": 2016,
+      "venue": "arXiv preprint arXiv:1610",
+      "doi": null
+    },
+    {
+      "title": "Federated machine learning: Concept and applications",
+      "authors": [
+        "Yang Q",
+        "Liu Y",
+        "Chen T"
+      ],
+      "year": 2019,
+      "venue": "ACM Transactions on Intelligent Systems and Technology (TIST)",
+      "doi": null
+    },
+    {
+      "title": "Communication-efficient learning of deep networks from decentralized data",
+      "authors": [
+        "McMahan B",
+        "Moore E",
+        "Ramage D",
+        "Hampson S"
+      ],
+      "year": 2017,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Model-contrastive federated learning",
+      "authors": [
+        "Li Q",
+        "He B"
+      ],
+      "year": 2021,
+      "venue": "Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition",
+      "doi": null
+    },
+    {
+      "title": "Krizhevsky, A., & Hinton, G",
+      "authors": [],
+      "year": 2009,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Network in network",
+      "authors": [
+        "Lin M",
+        "Chen Q"
+      ],
+      "year": 2013,
+      "venue": "arXiv preprint arXiv:1312",
+      "doi": null
+    },
+    {
+      "title": "Deep residual learning for image recognition",
+      "authors": [
+        "He K",
+        "Zhang X",
+        "Ren S"
+      ],
+      "year": 2016,
+      "venue": "Proceedings of the IEEE conference on computer vision and pattern recognition",
+      "doi": null
+    },
+    {
+      "title": "Cyclical learning rates for training neural networks",
+      "authors": [
+        "L. N."
+      ],
+      "year": 2017,
+      "venue": "2017 IEEE winter conference on applications of computer vision",
+      "doi": null
+    },
+    {
+      "title": "Comparative review of the intrusion detection systems based on federated learning: Advantages and open challenges",
+      "authors": [
+        "Fedorchenko E",
+        "Novikova E"
+      ],
+      "year": 2022,
+      "venue": null,
+      "doi": null
+    }
+  ],
+  "relationships": [],
+  "analysis_json_path": "src/data/analysis/1eeb9f563b1d454eb82c88693d80e4ab-moon.json",
+  "needs_human_review": false,
+  "created_at": "2026-06-18T11:42:34.914859Z",
+  "updated_at": "2026-06-18T11:42:34.914859Z",
+  "venue_source": "crossref",
+  "doi": "10.1109/icsece58870.2023.10263504",
+  "arxiv_id": null,
+  "source_url": "https://doi.org/10.1109/icsece58870.2023.10263504",
+  "citation_text": "Shen Chen, Zekai Lin, Jing Ma (2023). The Effect of Hyper-parameters in Model-contrastive Federated Learning Algorithm. 2023 IEEE International Conference on Sensors, Electronics and Computer Engineering (ICSECE).",
+  "bibtex": "@article{shenchen2023,\n  title = {The Effect of Hyper-parameters in Model-contrastive Federated Learning Algorithm},\n  author = {Shen Chen and Zekai Lin and Jing Ma},\n  year = {2023},\n  journal = {2023 IEEE International Conference on Sensors, Electronics and Computer Engineering (ICSECE)},\n  doi = {10.1109/icsece58870.2023.10263504}\n}",
+  "metadata_confidence": 0.95,
+  "metadata_source_method": "crossref",
+  "metadata_verification_notes": "标题、作者、会议信息与 DOI 已按 Crossref 结果校正；引用作者与标题按新规则重新解析。",
+  "source_candidates": [
+    {
+      "provider": "local_pdf",
+      "title": "# The Effect of Hyper-parameters in Model-contrastive Federated Learning Algorithm",
+      "authors": [
+        "Shen Chen $^{",
+        "\\dagger}$",
+        "Zekai Lin $^{",
+        "\\dagger}$",
+        "Jing Ma $^{",
+        "\\dagger}$"
+      ],
+      "abstract": "—Federated learning enables all parties to perform data analysis and machine learning through the updated use of global models. The key difficulty in federation learning is data heterogeneity, and there are numerous studies that address this challenge but with poor results. The model-contrastive federated learning (MOON) algorithm described in this paper, an improvement on FedAvg, is a Model-level federation learning algorithm that is concise and efficient. The core idea is to train a local model by comparing between global models, which in turn updates the global model without the need for privacy data uploads while model-level training solves the non-HID problem. Widely tests are performed by the authors to confirm the MOON algorithm's efficacy. Contrasting various image databases, lr, $\\mu$ and other different parameters reveals that MOON outperforms other federal learning algorithms in all aspects such as learning accuracy, convergence speed and training time. It demonstrates its advanced and robustness.",
+      "year": 2020,
+      "venue": null,
+      "doi": null,
+      "arxiv_id": "1610.05492",
+      "source_url": null,
+      "citation_text": null,
+      "bibtex": null,
+      "confidence": 0.8500000000000001,
+      "reason": "来自本地 PDF 文本抽取。"
+    },
+    {
+      "provider": "crossref_title",
+      "title": "The Effect of Hyper-parameters in Model-contrastive Federated Learning Algorithm",
+      "authors": [
+        "Shen Chen",
+        "Zekai Lin",
+        "Jing Ma"
+      ],
+      "abstract": "",
+      "year": 2023,
+      "venue": "2023 IEEE International Conference on Sensors, Electronics and Computer Engineering (ICSECE)",
+      "doi": "10.1109/icsece58870.2023.10263504",
+      "arxiv_id": null,
+      "source_url": "https://doi.org/10.1109/icsece58870.2023.10263504",
+      "citation_text": "Shen Chen, Zekai Lin, Jing Ma (2023). The Effect of Hyper-parameters in Model-contrastive Federated Learning Algorithm. 2023 IEEE International Conference on Sensors, Electronics and Computer Engineering (ICSECE).",
+      "bibtex": "@article{shenchen2023,\n  title = {The Effect of Hyper-parameters in Model-contrastive Federated Learning Algorithm},\n  author = {Shen Chen and Zekai Lin and Jing Ma},\n  year = {2023},\n  journal = {2023 IEEE International Conference on Sensors, Electronics and Computer Engineering (ICSECE)},\n  doi = {10.1109/icsece58870.2023.10263504}\n}",
+      "confidence": 0.4751,
+      "reason": "标题相似度 0.99，包含 DOI，作者数 3"
+    },
+    {
+      "provider": "crossref_title",
+      "title": "Model-Contrastive Federated Learning",
+      "authors": [
+        "Qinbin Li",
+        "Bingsheng He",
+        "Dawn Song"
+      ],
+      "abstract": "",
+      "year": 2021,
+      "venue": "2021 IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)",
+      "doi": "10.1109/cvpr46437.2021.01057",
+      "arxiv_id": null,
+      "source_url": "https://doi.org/10.1109/cvpr46437.2021.01057",
+      "citation_text": "Qinbin Li, Bingsheng He, Dawn Song (2021). Model-Contrastive Federated Learning. 2021 IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR).",
+      "bibtex": "@article{qinbinli2021,\n  title = {Model-Contrastive Federated Learning},\n  author = {Qinbin Li and Bingsheng He and Dawn Song},\n  year = {2021},\n  journal = {2021 IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},\n  doi = {10.1109/cvpr46437.2021.01057}\n}",
+      "confidence": 0.3241,
+      "reason": "标题相似度 0.61，包含 DOI，作者数 3"
+    },
+    {
+      "provider": "crossref_title",
+      "title": "Model Contrastive Federated Learning on Re-Identification",
+      "authors": [
+        "Seongyoon Kim",
+        "Woojin Chung",
+        "Sungwoo Cho",
+        "Yongjin Yang",
+        "Shinhyeok Hwang",
+        "Se-Young Yun"
+      ],
+      "abstract": "",
+      "year": 2024,
+      "venue": "Journal of KIISE",
+      "doi": "10.5626/jok.2024.51.9.841",
+      "arxiv_id": null,
+      "source_url": "https://doi.org/10.5626/jok.2024.51.9.841",
+      "citation_text": "Seongyoon Kim, Woojin Chung, Sungwoo Cho, Yongjin Yang (2024). Model Contrastive Federated Learning on Re-Identification. Journal of KIISE.",
+      "bibtex": "@article{seongyoonkim2024,\n  title = {Model Contrastive Federated Learning on Re-Identification},\n  author = {Seongyoon Kim and Woojin Chung and Sungwoo Cho and Yongjin Yang and Shinhyeok Hwang and Se-Young Yun},\n  year = {2024},\n  journal = {Journal of KIISE},\n  doi = {10.5626/jok.2024.51.9.841}\n}",
+      "confidence": 0.2987,
+      "reason": "标题相似度 0.55，包含 DOI，作者数 6"
+    }
+  ]
+}

@@ -1,0 +1,292 @@
+{
+  "id": "a93e13033a934717852c1182b8d6fd88-fedprox",
+  "short": "FedProx",
+  "title": "Federated Optimization in Heterogeneous Networks",
+  "year": 2023,
+  "authors": [
+    "Tian Li",
+    "Anit Kumar Sahu",
+    "Ameet Talwalkar",
+    "Virginia Smith"
+  ],
+  "first_author": "Tian Li",
+  "venue": "IEEE Network",
+  "abstract": "Federated Learning is a distributed learning paradigm with two key challenges that differentiate it from traditional distributed optimization: (1) significant variability in terms of the systems characteristics on each device in the network (systems heterogeneity), and (2) non-identically distributed data across the network (statistical heterogeneity). In this work, we introduce a framework, FedProx, to tackle heterogeneity in federated networks. FedProx can be viewed as a generalization and re-parametrization of FedAvg, the current state-of-the-art method for federated learning. While this re-parameterization makes only minor modifications to the method itself, these modifications have important ramifications both in theory and in practice. Theoretically, we provide convergence guarantees for our framework when learning over data from non-identical distributions (statistical heterogeneity), and while adhering to device-level systems constraints by allowing each participating device to perform a variable amount of work (systems heterogeneity). Practically, we demonstrate that FedProx allows for more robust convergence than FedAvg across a suite of realistic federated datasets. In particular, in highly heterogeneous settings, FedProx demonstrates significantly more stable and accurate convergence behavior relative to FedAvg—improving absolute test accuracy by 22% on average.",
+  "summary": "FedProx是一个联邦优化框架，旨在解决联邦学习中的系统异质性和统计异质性问题。它通过对FedAvg进行泛化，引入近端项来允许设备根据自身能力执行不同数量的局部工作，从而提升训练的稳定性和准确性，在高度异构环境中平均提高22%的测试准确率，并提供了理论收敛保证。",
+  "idea": "通过在客户端局部目标中加入与当前全局模型的近端约束项，限制本地更新偏离过远，并允许不同设备在异构系统条件下执行不同强度的本地优化。",
+  "categories": [
+    "optimization"
+  ],
+  "source_path": "D:\\48174\\projects\\Knowledge-Map\\paper\\01_基础联邦优化\\a93e13033a934717852c1182b8d6fd88-fedprox.pdf",
+  "innovation": "提出FedProx框架，通过近端项泛化FedAvg，使之能够统一处理系统与统计异构性；提供了非IID数据和异构系统条件下的收敛性理论分析；在多种真实联邦数据集上验证了FedProx比FedAvg更稳定、更准确。",
+  "innovation_points": [
+    {
+      "point": "引入近端项来增强联邦学习的稳定性，允许设备进行可变量的局部工作，而不丢失慢速设备的信息。",
+      "evidence": "we propose adding a proximal term to the objective that helps to improve the stability of the method. This term provides a principled way for the server to account for heterogeneity associated with partial information.",
+      "confidence": 0.9
+    },
+    {
+      "point": "在非独立同分布数据和设备仅完成部分工作（系统异构）的条件下，给出了FedProx的收敛性保证。",
+      "evidence": "we provide convergence guarantees for our framework when learning over data from non-identical distributions (statistical heterogeneity), and while adhering to device-level systems constraints by allowing each participating device to perform a variable amount of work (systems heterogeneity).",
+      "confidence": 0.9
+    },
+    {
+      "point": "实验证明FedProx在高度异构设置下比FedAvg有显著提升，平均绝对测试准确率提高22%。",
+      "evidence": "in highly heterogeneous settings, FedProx demonstrates significantly more stable and accurate convergence behavior relative to FedAvg—improving absolute test accuracy by 22% on average.",
+      "confidence": 0.9
+    }
+  ],
+  "flow_steps": [
+    "服务器初始化全局模型参数w0。",
+    "每轮t，服务器选择K个可用设备子集。",
+    "将当前全局模型w^{t}发送给选中的设备。",
+    "每个设备k在本地以w^{t}为初始点，优化包含近端项的目标函数：F_k(w) + (μ/2)||w - w^{t}||^2，执行若干步（根据自身计算能力可能不同）局部更新，得到w_k^{t}。",
+    "设备将更新后的模型w_k^{t}上传回服务器。",
+    "服务器聚合所有参与设备的模型（如简单平均）得到w^{t+1}。",
+    "重复直至收敛。"
+  ],
+  "applications": "适用于存在高度系统异质性（如移动设备、IoT设备计算能力不同）和统计异质性（各设备本地数据非iid）的联邦学习场景，如移动键盘预测、个性化健康模型训练等。",
+  "limitations": "The paper acknowledges that privacy is not addressed. Additionally, the FedProx algorithm introduces a proximal term hyperparameter that may require careful tuning, and the theoretical guarantees depend on a bounded dissimilarity assumption that may be restrictive.",
+  "limitation_points": [
+    {
+      "point": "The work does not address the privacy challenge in federated learning.",
+      "evidence": "Footnote 1: 'Privacy is a third key challenge in the federated setting. While not the focus of this work, ...'",
+      "type": "paper_claimed",
+      "severity": "medium"
+    },
+    {
+      "point": "FedProx introduces a proximal term with a hyperparameter μ, but the selection of μ is not thoroughly discussed; its sensitivity may affect performance.",
+      "evidence": "The paper proposes adding a proximal term without providing details on how to choose μ automatically.",
+      "type": "inferred",
+      "severity": "medium"
+    },
+    {
+      "point": "The convergence analysis relies on a bounded dissimilarity assumption, which may not hold in all real-world federated learning scenarios.",
+      "evidence": "Section 2: 'Our dissimilarity characterization is inspired by the randomized Kaczmarz method ... a similar assumption of which has been used ...' implies an assumption that local functions are somewhat similar.",
+      "type": "inferred",
+      "severity": "low"
+    }
+  ],
+  "citations": [
+    {
+      "title": "Tensorflow federated: Machine learning on decentralized data. URL https://www.tensorflow.org/federated.",
+      "authors": [],
+      "year": null,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Abadi, M., Barham, P., Chen, J., Chen, Z., Davis, A., Dean, J., Devin, M., Ghemawat, S., Irving, G., Isard, M., Kudlur, M. K., Levenberg, J., Monga, R., Moore, S., Murray, D. G., Steiner, B., Tucker, P., Vasudevan, V., Warden, P., Wicke, M.",
+      "authors": [],
+      "year": 2016,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Allen-Zhu, Z. How to make the gradients small stochastically: Even faster convex and nonconvex sgd. In Advances in Neural Information Processing Systems, 2018.",
+      "authors": [],
+      "year": 2018,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Bonawitz, K., Eichner, H., Grieskamp, W., Huba, D., Ingerman, A., Ivanov, V., Kiddon, C., Konecny, J., Mazzocchi, S., McMahan, H. B., Overveldt, T. V., Petrou, D., Ramage, D., and Roselander, J. Towards federated learning at scale: system d",
+      "authors": [],
+      "year": 2019,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Boyd, S., Parikh, N., Chu, E., Peleato, B., and Eckstein, J. Distributed optimization and statistical learning via the alternating direction method of multipliers. Foundations and Trends in Machine Learning, 2010.",
+      "authors": [],
+      "year": 2010,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Caldas, S., Wu, P., Li, T., Konečný, J., McMahan, H. B., Smith, V., and Talwalkar, A. Leaf: A benchmark for federated settings. arXiv preprint arXiv:1812.01097, 2018.",
+      "authors": [],
+      "year": 2018,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Cohen, G., Afshar, S., Tapson, J., and van Schaik, A. Emnist: an extension of mnist to handwritten letters. arXiv preprint arXiv:1702.05373, 2017.",
+      "authors": [],
+      "year": 2017,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Dean, J., Corrado, G., Monga, R., Chen, K., Devin, M., Le, Q. V., Mao, M., Ranzato, M., Senior, A., Tucker, P., Yang, K., and Ng, A. Large scale distributed deep networks. In Advances in Neural Information Processing Systems, 2012.",
+      "authors": [],
+      "year": 2012,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Dekel, O., Gilad-Bachrach, R., Shamir, O., and Xiao, L. Optimal Distributed Online Prediction Using Mini-Batches. Journal of Machine Learning Research, 2012.",
+      "authors": [],
+      "year": 2012,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Ghadimi, S. and Lan, G. Stochastic first-and zeroth-order methods for nonconvex stochastic programming. SIAM Journal on Optimization, 2013.",
+      "authors": [],
+      "year": 2013,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Go, A., Bhayani, R., and Huang, L. Twitter sentiment classification using distant supervision. CS224N Project Report, Stanford, 2009.",
+      "authors": [],
+      "year": 2009,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Goldblum, M., Reich, S., Fowl, L., Ni, R., Cherepanova, V., and Goldstein, T. Unraveling meta-learning: Understanding feature representations for few-shot tasks. arXiv preprint arXiv:2002.06753, 2020.",
+      "authors": [],
+      "year": 2002,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Hao, Y., Rong, J., and Sen, Y. On the linear speedup analysis of communication efficient momentum sgd for distributed non-convex optimization. In International Conference on Machine Learning, 2019.",
+      "authors": [],
+      "year": 2019,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Huang, L., Yin, Y., Fu, Z., Zhang, S., Deng, H., and Liu, D. Loadaboost: Loss-based adaboost federated machine learning on medical data. arXiv preprint arXiv:1811.12629, 2018.",
+      "authors": [],
+      "year": 2018,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Jeong, E., Oh, S., Kim, H., Park, J., Bennis, M., and Kim, S.-L. Communication-efficient on-device machine learning: Federated distillation and augmentation under non-iid private data. arXiv preprint arXiv:1811.11479, 2018.",
+      "authors": [],
+      "year": 2018,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Jiang, P. and Agrawal, G. A linear speedup analysis of distributed deep learning with sparse and quantized communication. In Advances in Neural Information Processing Systems, 2018.",
+      "authors": [],
+      "year": 2018,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Kaczmarz, S. Approximate solution of systems of linear equations. International Journal of Control, 1993.",
+      "authors": [],
+      "year": 1993,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Khodak, M., Balcan, M.-F. F., and Talwalkar, A. S. Adaptive gradient-based meta-learning methods. In Advances in Neural Information Processing Systems, 2019.",
+      "authors": [],
+      "year": 2019,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "LeCun, Y., Bottou, L., Bengio, Y., and Haffner, P. Gradient-based learning applied to document recognition. Proceedings of the IEEE, 1998.",
+      "authors": [],
+      "year": 1998,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Li, M., Andersen, D. G., Smola, A. J., and Yu, K. Communication efficient distributed machine learning with the parameter server. In Advances in Neural Information Processing Systems, 2014a.",
+      "authors": [],
+      "year": 2014,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Li, M., Zhang, T., Chen, Y., and Smola, A. J. Efficient mini-batch training for stochastic optimization. In Conference on Knowledge Discovery and Data Mining, 2014b.",
+      "authors": [],
+      "year": 2014,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Li, T., Sahu, A., Talwalkar, A., and Smith, V. Federated learning: Challenges, methods, and future directions. arXiv preprint arXiv:1908.07873, 2019.",
+      "authors": [],
+      "year": 1908,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Li, T., Sahu, A. K., Zaheer, M., Sanjabi, M., Talwalkar, A., and Smith, V. Feddane: A federated newton-type method. arXiv preprint arXiv:2001.01920, 2020.",
+      "authors": [],
+      "year": 2001,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Lin, T., Stich, S. U., and Jaggi, M. Don't use large mini-batches, use local sgd. In International Conference on Learning Representations, 2020.",
+      "authors": [],
+      "year": 2020,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "McMahan, H. B., Moore, E., Ramage, D., Hampson, S., and Arcas, B. A. y. Communication-efficient learning of deep networks from decentralized data. In International Conference on Artificial Intelligence and Statistics, 2017.",
+      "authors": [],
+      "year": 2017,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Pennington, J., Socher, R., and Manning, C. Glove: Global vectors for word representation. In Empirical Methods in Natural Language Processing, 2014.",
+      "authors": [],
+      "year": 2014,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Reddi, S. J., Konečný, J., Richtárik, P., Póczós, B., and Smola, A. Aide: Fast and communication efficient distributed optimization. arXiv preprint arXiv:1608.06879, 2016.",
+      "authors": [],
+      "year": 2016,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Richtárik, P. and Takáč, M. Distributed coordinate descent method for learning with big data. Journal of Machine Learning Research, 2016.",
+      "authors": [],
+      "year": 2016,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Schmidt, M. and Roux, N. L. Fast convergence of stochastic gradient descent under a strong growth condition. arXiv preprint arXiv:1308.6370, 2013.",
+      "authors": [],
+      "year": 2013,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Shamir, O., Srebro, N., and Zhang, T. Communication-efficient distributed optimization using an approximate newton-type method. In International Conference on Machine Learning, 2014.",
+      "authors": [],
+      "year": 2014,
+      "venue": null,
+      "doi": null
+    }
+  ],
+  "relationships": [],
+  "analysis_json_path": "src/data/analysis/a93e13033a934717852c1182b8d6fd88-fedprox.json",
+  "needs_human_review": false,
+  "created_at": "2026-06-18T11:11:07.629301Z",
+  "updated_at": "2026-06-18T11:11:07.629301Z",
+  "venue_source": "journal",
+  "doi": "10.1109/mnet.006.2200437",
+  "arxiv_id": null,
+  "source_url": "https://doi.org/10.1109/mnet.006.2200437",
+  "metadata_verification_notes": "修正了标题中的 markdown 残片与作者污染，保留 DOI 对应期刊来源。"
+}
