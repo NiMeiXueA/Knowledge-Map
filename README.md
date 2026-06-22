@@ -2,9 +2,16 @@
 
 基于 **FastAPI + LangGraph + React** 构建的前后端分离论文分析平台。上传 PDF 后，系统自动完成元数据提取、联网校验、分类、创新点/局限性分析、反思修复、关系图构建等全流程，并以知识地图的形式可视化展示。
 
+## 项目介绍视频
+
+[![项目介绍视频](https://img.shields.io/badge/Bilibili-视频介绍-blue)](https://www.bilibili.com/video/BV1cd7w6sEB9/)
+
+<iframe src="//player.bilibili.com/player.html?bvid=BV1cd7w6sEB9" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true" width="100%" height="450"></iframe>
+
 ## 目录
 
 - [功能特性](#功能特性)
+- [项目介绍视频](#项目介绍视频)
 - [技术栈](#技术栈)
 - [项目架构](#项目架构)
 - [环境要求](#环境要求)
