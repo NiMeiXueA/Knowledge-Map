@@ -6,8 +6,6 @@
 
 [![项目介绍视频](https://img.shields.io/badge/Bilibili-视频介绍-blue)](https://www.bilibili.com/video/BV1cd7w6sEB9/)
 
-<iframe src="//player.bilibili.com/player.html?bvid=BV1cd7w6sEB9" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true" width="100%" height="450"></iframe>
-
 ## 目录
 
 - [功能特性](#功能特性)
