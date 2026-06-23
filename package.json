@@ -8,6 +8,7 @@
     "dev:backend": "python desktop/backend/run_backend.py",
     "build:front": "cd front && npm run build",
     "build:backend": "powershell -ExecutionPolicy Bypass -File desktop/backend/build_backend.ps1",
+    "tauri": "tauri",
     "tauri:dev": "tauri dev",
     "tauri:build": "tauri build"
   },
