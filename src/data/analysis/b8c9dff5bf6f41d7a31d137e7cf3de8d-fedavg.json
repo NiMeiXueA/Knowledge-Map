@@ -1,0 +1,535 @@
+{
+  "id": "b8c9dff5bf6f41d7a31d137e7cf3de8d-fedavg",
+  "short": "Learning",
+  "title": "Communication-Efficient Learning of Deep Networks from Decentralized Data",
+  "year": 2017,
+  "authors": [
+    "H. Brendan McMahan",
+    "Eider Moore",
+    "Daniel Ramage",
+    "Seth Hampson",
+    "Blaise Aguera y Arcas"
+  ],
+  "first_author": "H. Brendan McMahan",
+  "venue": "AISTATS",
+  "abstract": "Modern mobile devices have access to a wealth of data suitable for learning models, which in turn can greatly improve the user experience on the device. For example, language models can improve speech recognition and text entry, and image models can automatically select good photos. However, this rich data is often privacy sensitive, large in quantity, or both, which may preclude logging to the data center and training there using conventional approaches. We advocate an alternative that leaves the training data distributed on the mobile devices, and learns a shared model by aggregating locally-computed updates. We term this decentralized approach Federated Learning.",
+  "summary": "本文提出联邦学习（Federated Learning）框架，使移动设备能协作训练共享模型而无需集中原始数据，从而保护隐私。核心算法FederatedAveraging通过迭代模型平均结合本地SGD，在非IID和不平衡数据上实现高效通信，将所需通信轮次减少10-100倍。实验在多种模型和数据集上验证了其鲁棒性。",
+  "idea": "每个客户端在本地数据上执行多步SGD更新后，服务器周期性地聚合客户端模型参数进行加权平均，从而在不共享原始数据的情况下训练全局模型，并大幅减少通信次数。",
+  "categories": [
+    "optimization"
+  ],
+  "source_path": "D:\\48174\\projects\\Knowledge-Map-App\\src\\data\\paper\\01_基础联邦优化\\b8c9dff5bf6f41d7a31d137e7cf3de8d-fedavg.pdf",
+  "innovation": "首次提出联邦学习概念以应对移动设备数据隐私和通信挑战，并设计了实用的FederatedAveraging算法，实验证明其在非IID数据下具有显著通信效率。",
+  "innovation_points": [
+    {
+      "point": "提出联邦学习概念，将模型训练与原始数据访问解耦，强调数据保留在本地以保护隐私。",
+      "evidence": "摘要中明确指出“leaves the training data distributed on the mobile devices, and learns a shared model by aggregating locally-computed updates”，并命名为Federated Learning。",
+      "confidence": 0.9
+    },
+    {
+      "point": "设计FederatedAveraging算法，通过本地SGD和周期性模型平均，有效降低通信成本。",
+      "evidence": "摘要“practical method for the federated learning of deep networks based on iterative model averaging”，以及实验“reduction in required communication rounds by 10–100×”。",
+      "confidence": 0.9
+    },
+    {
+      "point": "系统验证了算法在非IID和不平衡数据分布上的鲁棒性。",
+      "evidence": "摘要“experiments demonstrate the approach is robust to the unbalanced and non-IID data distributions”。",
+      "confidence": 0.9
+    }
+  ],
+  "flow_steps": [
+    "服务器初始化全局模型参数",
+    "每轮随机选择部分客户端参与",
+    "服务器广播当前全局模型给选中客户端",
+    "各客户端利用本地数据执行多轮SGD更新，得到本地模型",
+    "客户端仅将更新后的模型参数（或差分）上传至服务器",
+    "服务器按各客户端数据量加权平均所有上传的模型，更新全局模型",
+    "重复上述通信轮次直至模型收敛"
+  ],
+  "applications": "移动设备图像分类；个性化语言模型（语音识别、输入法预测）；其它涉及隐私敏感数据的移动端应用",
+  "limitations": "本研究主要在受控实验环境下验证了联邦平均算法的有效性，尚未解决实际部署中面临的客户端数据动态变化、可用性模式差异及错误处理等关键问题。",
+  "limitation_points": [
+    {
+      "point": "未考虑实际部署中的客户端数据集变化、可用性相关性及错误更新等实际问题。",
+      "evidence": "“A deployed federated optimization system must also address a myriad of practical issues: client datasets that change as data is added and deleted; client availability that correlates with the local data distribution in complex ways ... and clients that never respond or send corrupted updates. These issues are beyond the scope of the current work.”",
+      "type": "paper_claimed",
+      "severity": "medium"
+    },
+    {
+      "point": "实验基于同步更新和固定客户端集的受控环境，与真实联邦学习场景中的异步、动态特性存在差距。",
+      "evidence": "“We assume a synchronous update scheme that proceeds in rounds of communication. There is a fixed set of K clients, each with a fixed local dataset.” 以及 “we use a controlled environment that is suitable for experiments, but still addresses the key issues of client availability and unbalanced and non-IID data.”",
+      "type": "paper_claimed",
+      "severity": "medium"
+    }
+  ],
+  "citations": [
+    {
+      "title": "Long short- ¨ term memory",
+      "authors": [
+        "Sepp Hochreiter"
+      ],
+      "year": 1997,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "LeCun, L",
+      "authors": [
+        "Y. LeCun",
+        "L. Bottou",
+        "Y. Bengio"
+      ],
+      "year": 1998,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Simple demographics often identify people uniquely",
+      "authors": [],
+      "year": 2000,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "A neural probabilistic language model",
+      "authors": [
+        "Yoshua Bengio",
+        "Rejean Ducharme",
+        "Pascal Vincent"
+      ],
+      "year": 2003,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Learning multiple layers of features from tiny images",
+      "authors": [],
+      "year": 2009,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Distributed training strategies for the structured perceptron",
+      "authors": [
+        "Ryan McDonald",
+        "Keith Hall"
+      ],
+      "year": 2010,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Corrado, Rajat Monga, Kai Chen, Matthieu Devin, Quoc V",
+      "authors": [
+        "Jeffrey Dean",
+        "Greg S. Corrado",
+        "Rajat Monga",
+        "Kai Chen",
+        "Matthieu Devin",
+        "Quoc V. Le",
+        "Mark Z. Mao",
+        "Marc’Aurelio Ranzato",
+        "Andrew Senior",
+        "Paul Tucker",
+        "Ke Yang"
+      ],
+      "year": 2012,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Distributed learning, communication complexity and privacy",
+      "authors": [
+        "Maria-Florina Balcan",
+        "Avrim Blum",
+        "Shai Fine",
+        "Yishay Mansour. Distributed learning"
+      ],
+      "year": 2012,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Hinton",
+      "authors": [
+        "Alex Krizhevsky",
+        "Ilya Sutskever"
+      ],
+      "year": 2012,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Communication efficient distributed optimization using an approximate newton-type method",
+      "authors": [
+        "Ohad Shamir",
+        "Nathan Srebro"
+      ],
+      "year": 2013,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Consumer data privacy in a networked world: A framework for protecting privacy and promoting innovation in the global digital economy",
+      "authors": [],
+      "year": 2013,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Secure multiparty aggregation with differential privacy: A comparative study",
+      "authors": [
+        "Slawomir Goryczka",
+        "Li Xiong"
+      ],
+      "year": 2013,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Trading computation for communication: Distributed stochastic dual coordinate ascent",
+      "authors": [],
+      "year": 2013,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Dauphin, Razvan Pascanu, C¸ aglar Gul¨ c¸ehre, KyungHyun Cho, Surya Ganguli, and Yoshua Bengio",
+      "authors": [
+        "Yann N. Dauphin",
+        "Razvan Pascanu",
+        "KyungHyun Cho",
+        "Surya Ganguli",
+        "Yoshua Bengio. Identifying"
+      ],
+      "year": 2014,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Distributed stochastic optimization and learning",
+      "authors": [
+        "Ohad Shamir",
+        "learning. In Communication",
+        "Computing (Allerton"
+      ],
+      "year": 2014,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Dropout: A simple way to prevent neural networks from overfitting",
+      "authors": [
+        "Nitish Srivastava",
+        "Geoffrey Hinton",
+        "Alex Krizhevsky",
+        "Ilya Sutskever"
+      ],
+      "year": 2014,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Fast distributed coordinate descent for non- ´ strongly convex losses",
+      "authors": [
+        "Olivier Fercoq",
+        "Zheng Qu",
+        "Peter Richtarik"
+      ],
+      "year": 2014,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Fractional max-pooling",
+      "authors": [
+        "Benjamin Graham. Fractional max-pooling. CoRR"
+      ],
+      "year": 2014,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Jordan, and Martin J",
+      "authors": [
+        "John Duchi",
+        "Michael I. Jordan"
+      ],
+      "year": 2014,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "The Algorithmic Foundations of Differential Privacy",
+      "authors": [
+        "Cynthia Dwork"
+      ],
+      "year": 2014,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "/ 11/computer-respond-to-this-email",
+      "authors": [
+        "Greg Corrado. Computer"
+      ],
+      "year": 2015,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Adding vs",
+      "authors": [
+        "Chenxin Ma",
+        "Virginia Smith",
+        "Martin Jaggi",
+        "Michael I Jordan",
+        "Peter Richtarik"
+      ],
+      "year": 2015,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Batch normalization: Accelerating deep network training by reducing internal covariate shift",
+      "authors": [
+        "Sergey Ioffe"
+      ],
+      "year": 2015,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Character-aware neural language models",
+      "authors": [
+        "Yoon Kim",
+        "Yacine Jernite",
+        "David Sontag"
+      ],
+      "year": 2015,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Communication complexity of distributed convex learning and optimization",
+      "authors": [
+        "Yossi Arjevani"
+      ],
+      "year": 2015,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Goodfellow, Oriol Vinyals, and Andrew M",
+      "authors": [
+        "Ian J. Goodfellow",
+        "Oriol Vinyals"
+      ],
+      "year": 2015,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Parallel training of deep neural networks with natural gradient and parameter averaging",
+      "authors": [
+        "Daniel Povey",
+        "Xiaohui Zhang"
+      ],
+      "year": 2015,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Privacy-preserving deep learning",
+      "authors": [
+        "Reza Shokri",
+        "Communications Security",
+        "CCS ’15"
+      ],
+      "year": 2015,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "The loss surfaces ´ of multilayer networks",
+      "authors": [
+        "Anna Choromanska",
+        "Mikael Henaff",
+        "Michael Mathieu",
+        "Gerard Ben Arous"
+      ],
+      "year": 2015,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "http://www",
+      "authors": [],
+      "year": 2015,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Brendan McMahan, Felix X",
+      "authors": [
+        "Jakub Konecnˇ y",
+        "H. Brendan McMahan",
+        "Felix X. Yu",
+        "Peter Richtarik",
+        "Ananda Theertha Suresh"
+      ],
+      "year": 2016,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Brendan McMahan, Sarvar Patel, Daniel Ramage, Aaron Segal, and Karn Seth",
+      "authors": [
+        "Keith Bonawitz",
+        "Vladimir Ivanov",
+        "Ben Kreuter",
+        "Antonio Marcedone",
+        "H. Brendan McMahan",
+        "Sarvar Patel",
+        "Daniel Ramage",
+        "Aaron Segal"
+      ],
+      "year": 2016,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Deep learning",
+      "authors": [
+        "Ian Goodfellow",
+        "Yoshua Bengio"
+      ],
+      "year": 2016,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Deep learning with differential privacy",
+      "authors": [
+        "Martin Abadi",
+        "Andy Chu",
+        "Ian Goodfellow",
+        "Brendan McMahan",
+        "Ilya Mironov",
+        "Kunal Talwar",
+        "Communications Security (ACM CCS"
+      ],
+      "year": 2016,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Revisiting distributed synchronous sgd",
+      "authors": [
+        "Jianmin Chen",
+        "Rajat Monga",
+        "Samy Bengio"
+      ],
+      "year": 2016,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Smartphone ownership and internet usage continues to climb in emerging economies",
+      "authors": [
+        "Jacob Poushter. Smartphone ownership"
+      ],
+      "year": 2016,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Taylor",
+      "authors": [
+        "Natalia Neverova",
+        "Christian Wolf",
+        "Griffin Lacey",
+        "Lex Fridman",
+        "Deepak Chandra",
+        "Brandon Barbello"
+      ],
+      "year": 2016,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "http://www.tensorflow",
+      "authors": [],
+      "year": 2016,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Untraceable electronic mail, return addresses, and digital pseudonyms",
+      "authors": [],
+      "year": null,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "William Shakespeare",
+      "authors": [],
+      "year": null,
+      "venue": null,
+      "doi": null
+    }
+  ],
+  "relationships": [],
+  "analysis_json_path": "src/data/analysis/b8c9dff5bf6f41d7a31d137e7cf3de8d-fedavg.json",
+  "needs_human_review": false,
+  "created_at": "2026-06-23T08:28:35.769857Z",
+  "updated_at": "2026-06-23T08:28:35.769857Z",
+  "venue_source": "local_pdf",
+  "doi": null,
+  "arxiv_id": "1602.05629",
+  "source_url": "https://proceedings.mlr.press/v54/mcmahan17a",
+  "citation_text": "H. Brendan McMahan, Eider Moore, Daniel Ramage, Seth Hampson, Blaise Aguera y Arcas (2017). Communication-Efficient Learning of Deep Networks from Decentralized Data. AISTATS.",
+  "bibtex": "@inproceedings{mcmahan2017communication,\n  title={Communication-Efficient Learning of Deep Networks from Decentralized Data},\n  author={McMahan, H. Brendan and Moore, Eider and Ramage, Daniel and Hampson, Seth and Ag{\\\"u}era y Arcas, Blaise},\n  booktitle={Artificial Intelligence and Statistics},\n  pages={1273--1282},\n  year={2017},\n  organization={PMLR}\n}",
+  "metadata_confidence": 0.95,
+  "metadata_source_method": "local_pdf",
+  "metadata_verification_notes": "远程候选标题、作者、摘要均不匹配；回退到本地PDF精确匹配，并根据公开记录补全作者、年份、venue和arxiv_id。",
+  "source_candidates": [
+    {
+      "provider": "local_pdf",
+      "title": "Communication-Efficient Learning of Deep Networks from Decentralized Data",
+      "authors": [
+        "H. Brendan McMahan"
+      ],
+      "abstract": "Modern mobile devices have access to a wealth of data suitable for learning models, which in turn can greatly improve the user experience on the device. For example, language models can improve speech recognition and text entry, and image models can automatically select good photos. However, this rich data is often privacy sensitive, large in quantity, or both, which may preclude logging to the data center and training there using conventional approaches. We advocate an alternative that leaves the training data distributed on the mobile devices, and learns a shared model by aggregating locally-computed updates. We term this decentralized approach Federated Learning.",
+      "year": 2012,
+      "venue": null,
+      "doi": null,
+      "arxiv_id": null,
+      "source_url": null,
+      "citation_text": null,
+      "bibtex": null,
+      "confidence": 0.8,
+      "reason": "来自本地 PDF 首页与摘要区域提取。"
+    },
+    {
+      "provider": "arxiv_id",
+      "title": "Distributed Learning, Communication Complexity and Privacy",
+      "authors": [
+        "Maria-Florina Balcan",
+        "Avrim Blum",
+        "Shai Fine",
+        "Yishay Mansour"
+      ],
+      "abstract": "We consider the problem of PAC-learning from distributed data and analyze fundamental communication complexity questions involved. We provide general upper and lower bounds on the amount of communication needed to learn well, showing that in addition to VC-dimension and covering number, quantities such as the teaching-dimension and mistake-bound of a class play an important role. We also present tight results for a number of common concept classes including conjunctions, parity functions, and decision lists. For linear separators, we show that for non-concentrated distributions, we can use a version of the Perceptron algorithm to learn with much less communication than the number of updates given by the usual margin bound. We also show how boosting can be performed in a generic manner in the distributed setting to achieve communication with only logarithmic dependence on 1/epsilon for any concept class, and demonstrate how recent work on agnostic learning from class-conditional queries can be used to achieve low communication in agnostic settings as well. We additionally present an analysis of privacy, considering both differential privacy and a notion of distributional privacy that is especially appealing in this context.",
+      "year": 2012,
+      "venue": "arXiv",
+      "doi": null,
+      "arxiv_id": "1204.3514v3",
+      "source_url": "https://arxiv.org/abs/1204.3514v3",
+      "citation_text": "Maria-Florina Balcan, Avrim Blum, Shai Fine, Yishay Mansour (2012). Distributed Learning, Communication Complexity and Privacy. arXiv.",
+      "bibtex": "@article{mariaflorina2012,\n  title = {Distributed Learning, Communication Complexity and Privacy},\n  author = {Maria-Florina Balcan and Avrim Blum and Shai Fine and Yishay Mansour},\n  year = {2012},\n  journal = {arXiv},\n  eprint = {1204.3514v3}\n}",
+      "confidence": 0.2943,
+      "reason": "标题相似度 0.32，包含 arXiv ID，作者数 4"
+    }
+  ]
+}

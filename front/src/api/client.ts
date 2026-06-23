@@ -1,15 +1,16 @@
+import { API_BASE_URL } from "./config";
 import type {
   Category,
   CategoryPayload,
   GraphPayload,
+  MineruSettingsPayload,
+  MineruSettingsSummary,
   ModelSettingsPayload,
   ModelSettingsSummary,
   Paper,
   PapersResponse,
   UploadTask
 } from "../types/paper";
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${API_BASE_URL}${path}`, init);
@@ -44,6 +45,13 @@ export const api = {
   getModelSettings: () => request<ModelSettingsSummary>("/api/settings/model"),
   saveModelSettings: (payload: ModelSettingsPayload) =>
     request<ModelSettingsSummary>("/api/settings/model", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    }),
+  getMineruSettings: () => request<MineruSettingsSummary>("/api/settings/mineru"),
+  saveMineruSettings: (payload: MineruSettingsPayload) =>
+    request<MineruSettingsSummary>("/api/settings/mineru", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload)

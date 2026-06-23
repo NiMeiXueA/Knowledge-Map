@@ -1,0 +1,17 @@
+{
+  "name": "knowledge-map-desktop",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Knowledge Map desktop shell (Tauri + React + FastAPI sidecar)",
+  "scripts": {
+    "dev:front": "cd front && npm run dev",
+    "dev:backend": "python desktop/backend/run_backend.py",
+    "build:front": "cd front && npm run build",
+    "build:backend": "powershell -ExecutionPolicy Bypass -File desktop/backend/build_backend.ps1",
+    "tauri:dev": "tauri dev",
+    "tauri:build": "tauri build"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^1.6.2"
+  }
+}

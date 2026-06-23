@@ -167,6 +167,24 @@ class ModelSettingsSummary(BaseModel):
     api_key_configured: bool  # API密钥是否已配置
 
 
+class MineruSettingsIn(BaseModel):
+    """MinerU 远程解析配置输入模型"""
+    api_token: str = ""  # MinerU API Bearer Token
+    api_base_url: str = "https://mineru.net"  # MinerU 服务基础 URL
+    backend: Literal["pipeline", "vlm"] = "pipeline"  # 解析后端
+    lang: str = "ch"  # 语言
+    api_timeout: int = 600  # 单次解析超时（秒）
+
+
+class MineruSettingsSummary(BaseModel):
+    """MinerU 远程解析配置摘要模型（不含 token 明文）"""
+    api_base_url: str  # 服务基础 URL
+    backend: Literal["pipeline", "vlm"]  # 解析后端
+    lang: str  # 语言
+    api_timeout: int  # 超时秒数
+    api_token_configured: bool  # token 是否已配置
+
+
 class PaperAnalysisPatch(BaseModel):
     """论文分析补丁模型（用于部分更新）"""
     abstract: str | None = None  # 摘要

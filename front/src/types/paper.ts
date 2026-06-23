@@ -103,6 +103,22 @@ export type ModelSettingsSummary = {
   api_key_configured: boolean;
 };
 
+export type MineruSettingsPayload = {
+  api_token: string;
+  api_base_url: string;
+  backend: "pipeline" | "vlm";
+  lang: string;
+  api_timeout: number;
+};
+
+export type MineruSettingsSummary = {
+  api_base_url: string;
+  backend: "pipeline" | "vlm";
+  lang: string;
+  api_timeout: number;
+  api_token_configured: boolean;
+};
+
 export type ModelSettingsPayload = {
   provider: "openai" | "anthropic";
   api_key: string;

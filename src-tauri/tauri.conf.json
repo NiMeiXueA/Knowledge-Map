@@ -1,0 +1,62 @@
+{
+  "build": {
+    "beforeDevCommand": "npm run dev:front",
+    "beforeBuildCommand": "npm run build:front",
+    "devPath": "http://localhost:5173",
+    "distDir": "../front/dist"
+  },
+  "package": {
+    "productName": "Knowledge Map",
+    "version": "0.2.0"
+  },
+  "tauri": {
+    "allowlist": {
+      "all": false,
+      "dialog": { "all": false, "open": true },
+      "path": { "all": true },
+      "http": { "all": true, "request": true },
+      "fs": { "all": true, "scope": ["$APPDATA/*", "$DESKTOP/*", "$DOCUMENT/*"] },
+      "protocol": { "all": true, "asset": true },
+      "process": { "all": false, "relaunch": true }
+    },
+    "updater": {
+      "active": true,
+      "endpoints": [
+        "https://github.com/NiMeiXueA/Knowledge-Map/releases/latest/download/latest.json"
+      ],
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDY2MkEyMzlFRjMxN0NEQTIKUldTaXpSZnpuaU1xWnMzOGNaTTEzMjJhQW43Yno3MmdwbE5JN01PcjR3V3NwOUZLY05vaU1CNEgK"
+    },
+    "bundle": {
+      "identifier": "com.knowledge-map.desktop",
+      "active": true,
+      "targets": "all",
+      "icon": [
+        "icons/icon.ico",
+        "icons/icon.png"
+      ],
+      "resources": [],
+      "externalBin": [
+        "binaries/knowledge-map-backend"
+      ],
+      "windows": {
+        "webviewInstallMode": {
+          "type": "embedBootstrapper"
+        }
+      }
+    },
+    "security": {
+      "csp": null
+    },
+    "windows": [
+      {
+        "title": "Knowledge Map",
+        "width": 1280,
+        "height": 820,
+        "minWidth": 960,
+        "minHeight": 600,
+        "resizable": true,
+        "fullscreen": false
+      }
+    ]
+  }
+}

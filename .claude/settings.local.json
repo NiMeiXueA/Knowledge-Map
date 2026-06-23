@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm --version)",
+      "Bash(cargo --version)",
+      "Bash(npm install *)",
+      "Bash(npm run *)",
+      "Bash(python -c \"import sys; print\\(sys.executable\\); print\\(sys.version\\)\")",
+      "Bash(python -c \"import fastapi, uvicorn, langgraph, pydantic, redis, httpx, fitz, pypdf, PIL, pytesseract; print\\('all imports ok'\\)\")",
+      "Bash(./node_modules/.bin/tauri --version)",
+      "Bash(./node_modules/.bin/tauri info *)",
+      "Bash(python *)",
+      "Bash(npx tsc *)"
+    ]
+  }
+}

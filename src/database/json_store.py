@@ -93,17 +93,21 @@ def patch_paper(paper_id: str, fields: dict) -> PaperModel | None:
 def save_analysis_json(paper: PaperModel) -> Path:
     """
     保存论文分析结果到单独的JSON文件
-    
-    文件路径：src/data/analysis/{paper_id}.json
-    
+
+    文件路径：{ANALYSIS_DIR}/{paper_id}.json
+    会同时把绝对路径回写到 paper.analysis_json_path，保证字段与实际写入位置一致
+    （桌面模式下 ANALYSIS_DIR 指向 %APPDATA%/Knowledge-Map/analysis/，
+    不能让字段停留在相对项目根的旧路径上）
+
     Args:
         paper: 论文模型
-        
+
     Returns:
         保存的文件路径
     """
     ANALYSIS_DIR.mkdir(parents=True, exist_ok=True)
     target = ANALYSIS_DIR / f"{paper.id}.json"
+    paper.analysis_json_path = str(target.as_posix())
     target.write_text(
         json.dumps(paper.model_dump(mode="json"), ensure_ascii=False, indent=2),
         encoding="utf-8",

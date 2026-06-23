@@ -1,0 +1,630 @@
+{
+  "id": "0eff03e077284d06bb584aa0ade088fd-fedntd",
+  "short": "Federated",
+  "title": "Preservation of the Global Knowledge by Not-True Distillation in Federated Learning",
+  "year": 2022,
+  "authors": [
+    "Gihun Lee",
+    "Minchan Jeong",
+    "Yongjin Shin",
+    "Sangmin Bae",
+    "Se-Young Yun"
+  ],
+  "first_author": "Gihun Lee",
+  "venue": "Advances in Neural Information Processing Systems 35",
+  "abstract": "In federated learning, a strong global model is collaboratively learned by aggregating clients’ locally trained models. Although this precludes the need to access clients’ data directly, the global model’s convergence often suffers from data heterogeneity. This study starts from an analogy to continual learning and suggests that forgetting could be the bottleneck of federated learning. We observe that the global model forgets the knowledge from previous rounds, and the local training induces forgetting the knowledge outside of the local distribution. Based on our findings, we hypothesize that tackling down forgetting will relieve the data heterogeneity problem. To this end, we propose a novel and effective algorithm, Federated Not-True Distillation (FedNTD), which preserves the global perspective on locally available data only for the not-true classes. In the experiments, FedNTD shows state-of-the-art performance on various setups without compromising data privacy or incurring additional communication costs.",
+  "summary": "联邦学习面临数据异质性挑战，本文从持续学习中的灾难性遗忘视角出发，通过实验发现非IID场景下全局模型在每轮通信后对先前知识存在遗忘，且本地训练会使模型遗忘本地分布之外的全局知识。为解决该问题，提出联邦非真实蒸馏（FedNTD）算法，在客户端本地训练时，利用全局模型对本地样本非真实类的软预测进行知识蒸馏，以保留全局视角。该方法不增加通信开销且不泄露隐私，在多种异构场景下取得领先性能。",
+  "idea": "在联邦学习客户端本地训练时，对每个样本仅对其非真实类别施加知识蒸馏损失，使本地模型在非真实类上的预测保持与全局模型一致，从而防止遗忘全局分布外知识。",
+  "categories": [
+    "distillation"
+  ],
+  "source_path": "D:\\48174\\projects\\Knowledge-Map-App\\src\\data\\paper\\03_知识蒸馏与异构联邦\\0eff03e077284d06bb584aa0ade088fd-fedntd.pdf",
+  "innovation": "首次从持续学习的遗忘角度剖析联邦学习数据异质性问题，提出仅蒸馏非真实类输出的FedNTD方法，以简洁方式保留全局知识，无需额外通信或隐私泄露。",
+  "innovation_points": [
+    {
+      "point": "揭示联邦学习中存在知识遗忘现象，并用预测一致性及Backward Transfer度量验证。",
+      "evidence": "第2节，图2：非IID全局模型类别准确率前后不一致，遗忘指标随异质性增大而上升。",
+      "confidence": 0.9
+    },
+    {
+      "point": "提出FedNTD算法，在本地训练目标中添加非真实类蒸馏损失，保留全局视角。",
+      "evidence": "第3节，本地损失函数由交叉熵损失和仅针对非真实类的KL散度项组成。",
+      "confidence": 0.9
+    },
+    {
+      "point": "FedNTD不增加通信成本，不泄露额外数据隐私。",
+      "evidence": "摘要及引言明确说明“without compromising data privacy or incurring additional communication costs”。",
+      "confidence": 0.9
+    },
+    {
+      "point": "受持续学习启发，建立了联邦学习与灾难性遗忘间的理论联系。",
+      "evidence": "摘要首句指出“starts from an analogy to continual learning”，第1节将联邦学习与持续学习面临的遗忘进行对比。",
+      "confidence": 0.0
+    }
+  ],
+  "flow_steps": [
+    "分析联邦学习与非IID数据 => 发现全局模型存在知识遗忘（预测一致性下降）",
+    "引入Backward Transfer指标量化遗忘程度，验证遗忘与数据异质性强相关",
+    "提出FedNTD算法：在本地训练中加入全局模型对非真实类的蒸馏损失",
+    "集成FedNTD到FedAvg等基础框架，在CIFAR-10/100、Tiny-ImageNet等数据集上实验",
+    "消融研究、超参数分析及与基线方法比较，验证SOTA性能",
+    "分析FedNTD对权重对齐和权重分歧的改善效果，解释其作用机理"
+  ],
+  "applications": "数据非独立同分布的跨设备联邦学习（如移动键盘预测、IoT传感器数据）；隐私敏感的多机构协作学习（如医疗影像、金融风控）；需要快速收敛且低通信开销的分布式训练场景",
+  "limitations": "本研究提出的FedNTD方法主要在较小的图像分类数据集上验证，缺乏大规模和多样化任务的实验；全局模型蒸馏引入的计算开销和对初始全局模型质量的依赖未充分讨论；对极端数据异质性和早期训练阶段的鲁棒性需进一步分析。",
+  "limitation_points": [
+    {
+      "point": "方法仅在CIFAR-10/100等小型图像分类数据集上验证，泛化到大规模、多模态或文本数据的效果未知。",
+      "evidence": "正文片段中仅提及CIFAR-10和CIFAR-100实验，未涉及其他任务或复杂数据集。",
+      "type": "inferred",
+      "severity": "medium"
+    },
+    {
+      "point": "局部训练时使用全局模型预测可能增加客户端的计算和存储开销，尽管不增加通信成本，但可能限制在资源受限设备上的应用。",
+      "evidence": "摘要声明‘不损害数据隐私或增加额外通信成本’，但未提及计算负担；局部蒸馏需要计算全局模型输出。",
+      "type": "inferred",
+      "severity": "low"
+    },
+    {
+      "point": "方法依赖全局模型对非真实类提供有意义的软标签，在训练初期或极端非独立同分布下，不准确的全局知识可能误导局部训练。",
+      "evidence": "论文假设‘保留全局视角’有效，但观察到的遗忘现象表明全局模型本身可能不稳定（图2），若全局模型性能较差，蒸馏可能产生负面影响。",
+      "type": "inferred",
+      "severity": "medium"
+    }
+  ],
+  "citations": [
+    {
+      "title": "Cifar-10 and cifar-100 datasets",
+      "authors": [
+        "Alex Krizhevsky",
+        "Vinod Nair",
+        "Geoffrey Hinton. Cifar-10"
+      ],
+      "year": 2009,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "The mnist database of handwritten digit images for machine learning research",
+      "authors": [],
+      "year": 2012,
+      "venue": "IEEE Signal Processing Magazine",
+      "doi": null
+    },
+    {
+      "title": "An empirical investigation of catastrophic forgetting in gradient-based neural networks",
+      "authors": [
+        "Ian J Goodfellow",
+        "Mehdi Mirza",
+        "Da Xiao",
+        "Aaron Courville"
+      ],
+      "year": 2013,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "The stability-plasticity dilemma: Investigating the continuum from catastrophic forgetting to age-limited learning effects",
+      "authors": [
+        "Martial Mermillod",
+        "Aurélia Bugaiska"
+      ],
+      "year": 2013,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Distilling the knowledge in a neural network",
+      "authors": [
+        "Geoffrey Hinton",
+        "Oriol Vinyals"
+      ],
+      "year": 2015,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Federated learning: Strategies for improving communication efficiency",
+      "authors": [
+        "Jakub Konecnˇ y",
+        "H Brendan McMahan",
+        "Felix X Yu",
+        "Peter Richtárik",
+        "Ananda Theertha Suresh"
+      ],
+      "year": 2016,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Federated optimiza- \\` tion: Distributed machine learning for on-device intelligence",
+      "authors": [
+        "Jakub Konecnˇ y",
+        "H Brendan McMahan",
+        "Daniel Ramage"
+      ],
+      "year": 2016,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Communication-efficient learning of deep networks from decentralized data",
+      "authors": [
+        "Brendan McMahan",
+        "Eider Moore",
+        "Daniel Ramage",
+        "Seth Hampson",
+        "pages 1273–1282. PMLR"
+      ],
+      "year": 2017,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Improved regularization of convolutional neural networks with cutout",
+      "authors": [
+        "Terrance DeVries"
+      ],
+      "year": 2017,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Learning without forgetting",
+      "authors": [
+        "Zhizhong Li"
+      ],
+      "year": 2017,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Overcoming catastrophic forgetting in neural networks",
+      "authors": [
+        "James Kirkpatrick",
+        "Razvan Pascanu",
+        "Neil Rabinowitz",
+        "Joel Veness",
+        "Guillaume Desjardins",
+        "Andrei A Rusu",
+        "Kieran Milan",
+        "John Quan",
+        "Tiago Ramalho",
+        "Agnieszka Grabska-Barwinska"
+      ],
+      "year": 2017,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Cinic-10 is not imagenet or cifar-10",
+      "authors": [
+        "Luke N Darlow",
+        "Elliot J Crowley",
+        "Antreas Antoniou"
+      ],
+      "year": 2018,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Efficient lifelong learning with a-gem",
+      "authors": [
+        "Arslan Chaudhry",
+        "Marc’Aurelio Ranzato",
+        "Marcus Rohrbach"
+      ],
+      "year": 2018,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Memory aware synapses: Learning what (not) to forget",
+      "authors": [
+        "Rahaf Aljundi",
+        "Francesca Babiloni",
+        "Mohamed Elhoseiny",
+        "Marcus Rohrbach"
+      ],
+      "year": 2018,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Riemannian walk for incremental learning: Understanding forgetting and intransigence",
+      "authors": [
+        "Arslan Chaudhry",
+        "Puneet K Dokania",
+        "Thalaiyasingam Ajanthan"
+      ],
+      "year": 2018,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Advances and open problems in federated learning",
+      "authors": [
+        "Peter Kairouz",
+        "H Brendan McMahan",
+        "Brendan Avent",
+        "Aurélien Bellet",
+        "Mehdi Bennis",
+        "Arjun Nitin Bhagoji",
+        "Keith Bonawitz",
+        "Zachary Charles",
+        "Graham Cormode",
+        "Rachel Cummings"
+      ],
+      "year": 2019,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Continual lifelong learning with neural networks: A review",
+      "authors": [
+        "German I Parisi",
+        "Ronald Kemker",
+        "Jose L Part",
+        "Christopher Kanan"
+      ],
+      "year": 2019,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Fedmd: Heterogenous federated learning via model distillation",
+      "authors": [
+        "Daliang Li"
+      ],
+      "year": 2019,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Measuring the effects of non-identical data distribution for federated visual classification",
+      "authors": [
+        "Tzu-Ming Harry Hsu",
+        "Hang Qi"
+      ],
+      "year": 2019,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "On the convergence of fedavg on non-iid data",
+      "authors": [
+        "Xiang Li",
+        "Kaixuan Huang",
+        "Wenhao Yang",
+        "Shusen Wang"
+      ],
+      "year": 2019,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Class-incremental learning: survey and performance evaluation on image classification",
+      "authors": [
+        "Marc Masana",
+        "Xialei Liu",
+        "Bartlomiej Twardowski",
+        "Mikel Menta",
+        "Andrew D Bagdanov"
+      ],
+      "year": 2020,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Continual learning in low-rank orthogonal subspaces",
+      "authors": [
+        "Arslan Chaudhry",
+        "Naeemullah Khan",
+        "Puneet K Dokania"
+      ],
+      "year": 2020,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Cpr: Classifier-projection regularization for continual learning",
+      "authors": [
+        "Sungmin Cha",
+        "Hsiang Hsu",
+        "Taebaek Hwang",
+        "Flavio P Calmon"
+      ],
+      "year": 2020,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Ensemble distillation for robust model fusion in federated learning",
+      "authors": [
+        "Tao Lin",
+        "Lingjing Kong",
+        "Sebastian U Stich"
+      ],
+      "year": 2020,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Fedbe: Making bayesian model ensemble applicable to federated learning",
+      "authors": [
+        "Hong-You Chen"
+      ],
+      "year": 2020,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Federated learning: A survey on enabling technologies, protocols, and applications",
+      "authors": [
+        "Mohammed Aledhari",
+        "Rehma Razzak",
+        "Reza M Parizi",
+        "applications. IEEE Access"
+      ],
+      "year": 2020,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Federated learning: Challenges, methods, and future directions",
+      "authors": [
+        "Tian Li",
+        "Anit Kumar Sahu",
+        "Ameet Talwalkar"
+      ],
+      "year": 2020,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Federated optimization in heterogeneous networks",
+      "authors": [
+        "Tian Li",
+        "Anit Kumar Sahu",
+        "Manzil Zaheer",
+        "Maziar Sanjabi",
+        "Ameet Talwalkar"
+      ],
+      "year": 2020,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Fedml: A research library and benchmark for federated machine learning",
+      "authors": [
+        "Chaoyang He",
+        "Songze Li",
+        "Jinhyun So",
+        "Xiao Zeng",
+        "Mi Zhang",
+        "Hongyi Wang",
+        "Xiaoyang Wang",
+        "Praneeth Vepakomma",
+        "Abhishek Singh",
+        "Hang Qiu"
+      ],
+      "year": 2020,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Orthogonal gradient descent for continual learning",
+      "authors": [
+        "Mehrdad Farajtabar",
+        "Navid Azizan",
+        "Alex Mott",
+        "pages 3762–3773. PMLR"
+      ],
+      "year": 2020,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Scaffold: Stochastic controlled averaging for federated learning",
+      "authors": [
+        "Sai Praneeth Karimireddy",
+        "Satyen Kale",
+        "Mehryar Mohri",
+        "Sashank Reddi",
+        "Sebastian Stich",
+        "pages 5132–5143. PMLR"
+      ],
+      "year": 2020,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Tighter theory for local sgd on identical and heterogeneous data",
+      "authors": [
+        "Ahmed Khaled",
+        "Konstantin Mishchenko",
+        "pages 4519–4529. PMLR"
+      ],
+      "year": 2020,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Using hindsight to anchor past knowledge in continual learning",
+      "authors": [
+        "Arslan Chaudhry",
+        "Albert Gordo",
+        "Puneet Kumar Dokania",
+        "Philip Torr"
+      ],
+      "year": 2020,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Federated learning based on dynamic regularization",
+      "authors": [
+        "Durmus Alp Emre Acar",
+        "Yue Zhao",
+        "Ramon Matas Navarro",
+        "Matthew Mattina",
+        "Paul N Whatmough"
+      ],
+      "year": 2021,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Federated learning on non-iid data silos: An experimental study",
+      "authors": [
+        "Qinbin Li",
+        "Yiqun Diao",
+        "Quan Chen"
+      ],
+      "year": 2021,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Model-contrastive federated learning",
+      "authors": [
+        "Qinbin Li",
+        "Bingsheng He",
+        "Pattern Recognition"
+      ],
+      "year": 2021,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "No fear of heterogeneity: Classifier calibration for federated learning with non-iid data",
+      "authors": [
+        "Mi Luo",
+        "Fei Chen",
+        "Dapeng Hu",
+        "Yifan Zhang",
+        "Jian Liang"
+      ],
+      "year": 2021,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Federated class-incremental learning",
+      "authors": [
+        "Jiahua Dong",
+        "Lixu Wang",
+        "Zhen Fang",
+        "Gan Sun",
+        "Shichao Xu",
+        "Xiao Wang"
+      ],
+      "year": 2022,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Local learning matters: Rethinking data heterogeneity in federated learning",
+      "authors": [
+        "Matias Mendieta",
+        "Taojiannan Yang",
+        "Pu Wang",
+        "Minwoo Lee",
+        "Zhengming Ding",
+        "Pattern Recognition"
+      ],
+      "year": 2022,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Catastrophic interference in connectionist networks: The sequential learning problem",
+      "authors": [
+        "Michael McCloskey",
+        "pages 109–165. Elsevier"
+      ],
+      "year": null,
+      "venue": null,
+      "doi": null
+    }
+  ],
+  "relationships": [],
+  "analysis_json_path": "src/data/analysis/0eff03e077284d06bb584aa0ade088fd-fedntd.json",
+  "needs_human_review": false,
+  "created_at": "2026-06-23T05:36:15.633923Z",
+  "updated_at": "2026-06-23T05:36:15.633923Z",
+  "venue_source": "crossref_title",
+  "doi": "10.52202/068431-2787",
+  "arxiv_id": "2106.03097",
+  "source_url": "https://doi.org/10.52202/068431-2787",
+  "citation_text": "Gihun Lee, Minchan Jeong, Yongjin Shin, Sangmin Bae, and Se-Young Yun (2022). Preservation of the Global Knowledge by Not-True Distillation in Federated Learning. Advances in Neural Information Processing Systems 35.",
+  "bibtex": "@inproceedings{lee2022preservation,\n  title={Preservation of the Global Knowledge by Not-True Distillation in Federated Learning},\n  author={Lee, Gihun and Jeong, Minchan and Shin, Yongjin and Bae, Sangmin and Yun, Se-Young},\n  booktitle={Advances in Neural Information Processing Systems 35},\n  year={2022},\n  doi={10.52202/068431-2787}\n}",
+  "metadata_confidence": 1.0,
+  "metadata_source_method": "crossref_title",
+  "metadata_verification_notes": "采用正式会议出版版本（NeurIPS 2022），标题、作者、摘要均与本地PDF一致；作者列表已修正，移除非人名机构名“KAIST”；拥有有效DOI，且有对应的arXiv预印本，综合可靠性最高。",
+  "source_candidates": [
+    {
+      "provider": "local_pdf",
+      "title": "Preservation of the Global Knowledge by Not-True Distillation in Federated Learning",
+      "authors": [
+        "Gihun Lee",
+        "Minchan Jeong",
+        "Yongjin Shin",
+        "Sangmin Bae",
+        "Se-Young Yun KAIST"
+      ],
+      "abstract": "In federated learning, a strong global model is collaboratively learned by aggregating clients’ locally trained models. Although this precludes the need to access clients’ data directly, the global model’s convergence often suffers from data heterogeneity. This study starts from an analogy to continual learning and suggests that forgetting could be the bottleneck of federated learning. We observe that the global model forgets the knowledge from previous rounds, and the local training induces forgetting the knowledge outside of the local distribution. Based on our findings, we hypothesize that tackling down forgetting will relieve the data heterogeneity problem. To this end, we propose a novel and effective algorithm, Federated Not-True Distillation (FedNTD), which preserves the global perspective on locally available data only for the not-true classes. In the experiments, FedNTD shows state-of-the-art performance on various setups without compromising data privacy or incurring additional communication costs<sup>1</sup>.",
+      "year": null,
+      "venue": null,
+      "doi": null,
+      "arxiv_id": null,
+      "source_url": null,
+      "citation_text": null,
+      "bibtex": null,
+      "confidence": 0.8,
+      "reason": "来自本地 PDF 首页与摘要区域提取。"
+    },
+    {
+      "provider": "arxiv_id",
+      "title": "Preservation of the Global Knowledge by Not-True Distillation in Federated Learning",
+      "authors": [
+        "Gihun Lee",
+        "Minchan Jeong",
+        "Yongjin Shin",
+        "Sangmin Bae",
+        "Se-Young Yun"
+      ],
+      "abstract": "In federated learning, a strong global model is collaboratively learned by aggregating clients' locally trained models. Although this precludes the need to access clients' data directly, the global model's convergence often suffers from data heterogeneity. This study starts from an analogy to continual learning and suggests that forgetting could be the bottleneck of federated learning. We observe that the global model forgets the knowledge from previous rounds, and the local training induces forgetting the knowledge outside of the local distribution. Based on our findings, we hypothesize that tackling down forgetting will relieve the data heterogeneity problem. To this end, we propose a novel and effective algorithm, Federated Not-True Distillation (FedNTD), which preserves the global perspective on locally available data only for the not-true classes. In the experiments, FedNTD shows state-of-the-art performance on various setups without compromising data privacy or incurring additional communication costs.",
+      "year": 2021,
+      "venue": "arXiv",
+      "doi": null,
+      "arxiv_id": "2106.03097v5",
+      "source_url": "https://arxiv.org/abs/2106.03097v5",
+      "citation_text": "Gihun Lee, Minchan Jeong, Yongjin Shin, Sangmin Bae (2021). Preservation of the Global Knowledge by Not-True Distillation in Federated Learning. arXiv.",
+      "bibtex": "@article{gihunlee2021,\n  title = {Preservation of the Global Knowledge by Not-True Distillation in Federated Learning},\n  author = {Gihun Lee and Minchan Jeong and Yongjin Shin and Sangmin Bae and Se-Young Yun},\n  year = {2021},\n  journal = {arXiv},\n  eprint = {2106.03097v5}\n}",
+      "confidence": 0.99,
+      "reason": "标题相似度 1.00，包含 arXiv ID，作者数 5"
+    },
+    {
+      "provider": "crossref_title",
+      "title": "Preservation of the Global Knowledge by Not-True Distillation in Federated Learning",
+      "authors": [
+        "Gihun Lee",
+        "Minchan Jeong",
+        "Yongjin Shin",
+        "Sangmin Bae",
+        "Se-Young Yun"
+      ],
+      "abstract": "",
+      "year": 2022,
+      "venue": "Advances in Neural Information Processing Systems 35",
+      "doi": "10.52202/068431-2787",
+      "arxiv_id": null,
+      "source_url": "https://doi.org/10.52202/068431-2787",
+      "citation_text": "Gihun Lee, Minchan Jeong, Yongjin Shin, Sangmin Bae (2022). Preservation of the Global Knowledge by Not-True Distillation in Federated Learning. Advances in Neural Information Processing Systems 35.",
+      "bibtex": "@article{gihunlee2022,\n  title = {Preservation of the Global Knowledge by Not-True Distillation in Federated Learning},\n  author = {Gihun Lee and Minchan Jeong and Yongjin Shin and Sangmin Bae and Se-Young Yun},\n  year = {2022},\n  journal = {Advances in Neural Information Processing Systems 35},\n  doi = {10.52202/068431-2787}\n}",
+      "confidence": 0.69,
+      "reason": "标题相似度 1.00，包含 DOI，作者数 5"
+    }
+  ]
+}

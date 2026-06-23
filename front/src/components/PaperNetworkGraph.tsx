@@ -49,6 +49,30 @@ const categoryColors: Record<string, string> = {
   other: "#8b5e3c"
 };
 
+// 兜底调色板：papers.json 中出现预设映射之外的分类时按 hash 取色，避免无颜色
+const FALLBACK_PALETTE = [
+  "#0f766e",
+  "#2563eb",
+  "#7c3aed",
+  "#be185d",
+  "#ca8a04",
+  "#475569",
+  "#a43d2f",
+  "#8b5e3c",
+  "#16a34a",
+  "#9333ea"
+];
+
+function colorForCategory(categoryId: string): string {
+  const known = categoryColors[categoryId];
+  if (known) return known;
+  let hash = 0;
+  for (let index = 0; index < categoryId.length; index += 1) {
+    hash = (hash * 31 + categoryId.charCodeAt(index)) >>> 0;
+  }
+  return FALLBACK_PALETTE[hash % FALLBACK_PALETTE.length];
+}
+
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
 }
@@ -456,7 +480,7 @@ export function PaperNetworkGraph({
                       }
                     }}
                   >
-                    <circle cx={point.x} cy={point.y} fill={categoryColors[node.category_id] || categoryColors.other} r={point.r} />
+                    <circle cx={point.x} cy={point.y} fill={colorForCategory(node.category_id)} r={point.r} />
                     <circle cx={point.x} cy={point.y} fill="transparent" r={point.r + 7} stroke="rgba(30, 36, 48, 0.08)" strokeWidth={1} />
                     <text className={`network-label ${dimmed ? "dimmed" : ""}`} x={point.x} y={point.y + point.r + 20}>
                       {node.short}

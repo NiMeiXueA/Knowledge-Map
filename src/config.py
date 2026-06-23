@@ -1,22 +1,68 @@
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
 from dotenv import load_dotenv
-import os
 
-load_dotenv()
+
+def _resolve_data_root() -> Path:
+    """
+    解析数据根目录。
+
+    优先级：
+    1. 环境变量 KNOWLEDGE_MAP_DATA_DIR（桌面模式由 Tauri 注入，或用户手动指定）
+    2. 项目根目录下的 src/data（开发模式保持原有行为）
+
+    桌面模式下数据写入用户目录而非安装目录，可以避免权限问题和卸载时丢失数据。
+    """
+    override = os.getenv("KNOWLEDGE_MAP_DATA_DIR", "").strip()
+    if override:
+        return Path(override).expanduser().resolve()
+    return Path(__file__).resolve().parent.parent / "src" / "data"
+
+
+def _resolve_env_path() -> Path:
+    """
+    解析 .env 文件位置。
+
+    - 如果用户显式指定了 KNOWLEDGE_MAP_ENV_PATH，使用该路径
+    - 否则优先使用项目根目录下的 .env（开发模式常见）
+    - 桌面模式下，Tauri 会通过 KNOWLEDGE_MAP_DATA_DIR 指向用户数据目录，
+      此时 .env 也会落在该目录下
+    """
+    explicit = os.getenv("KNOWLEDGE_MAP_ENV_PATH", "").strip()
+    if explicit:
+        return Path(explicit).expanduser().resolve()
+
+    data_dir_env = DATA_DIR / ".env"
+    project_env = BASE_DIR / ".env"
+    if data_dir_env.exists():
+        return data_dir_env
+    if project_env.exists():
+        return project_env
+    # 默认落点：跟随 DATA_DIR，桌面模式下会写入用户数据目录
+    return data_dir_env
+
 
 # 基础目录配置
 BASE_DIR = Path(__file__).resolve().parent.parent  # 项目根目录
-DATA_DIR = BASE_DIR / "src" / "data"  # 数据目录
+DATA_DIR = _resolve_data_root()  # 数据根目录（可在桌面模式下重定向）
 ANALYSIS_DIR = DATA_DIR / "analysis"  # 分析结果目录
 PAPERS_JSON_PATH = DATA_DIR / "papers.json"  # 论文集合JSON文件路径
-UPLOADS_DIR = BASE_DIR / "uploads"  # 上传文件暂存目录
-PAPER_DIR = BASE_DIR / "paper"  # 论文PDF存放目录
-ENV_PATH = BASE_DIR / ".env"  # 环境变量文件路径
+UPLOADS_DIR = DATA_DIR / "uploads"  # 上传文件暂存目录
+PAPER_DIR = DATA_DIR / "paper"  # 论文PDF存放目录
+
+ENV_PATH = _resolve_env_path()  # 环境变量文件路径
+
+# 加载 .env：必须在 ENV_PATH 计算完成之后调用
+#（dotenv 默认只读，不会写入；用户通过 API 修改模型设置时由 settings.py 写回）
+if ENV_PATH.exists():
+    load_dotenv(ENV_PATH)
+else:
+    load_dotenv()
 
 
 @dataclass(frozen=True)
@@ -113,8 +159,25 @@ def ensure_runtime_dirs() -> None:
     """确保所有运行时必要的目录存在"""
     for path in (DATA_DIR, ANALYSIS_DIR, UPLOADS_DIR, PAPER_DIR):
         path.mkdir(parents=True, exist_ok=True)
-    for category in CATEGORY_DEFINITIONS:
-        (PAPER_DIR / category.folder).mkdir(parents=True, exist_ok=True)
+    # paper/ 下的分类子目录以 papers.json 中实际 categories 为准；
+    # papers.json 不存在时退回到 CATEGORY_DEFINITIONS（首次启动的初始化路径）
+    folders = _collect_category_folders()
+    for folder in folders:
+        (PAPER_DIR / folder).mkdir(parents=True, exist_ok=True)
+
+
+def _collect_category_folders() -> list[str]:
+    """收集当前应当存在的分类文件夹名"""
+    import json
+
+    if PAPERS_JSON_PATH.exists():
+        try:
+            data = json.loads(PAPERS_JSON_PATH.read_text(encoding="utf-8"))
+            folders = [item.get("folder") for item in data.get("categories", [])]
+            return [item for item in folders if item]
+        except (OSError, ValueError, KeyError):
+            pass
+    return [item.folder for item in CATEGORY_DEFINITIONS]
 
 
 def get_env(name: str, default: Any = None) -> Any:

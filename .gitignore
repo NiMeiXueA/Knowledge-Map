@@ -13,3 +13,11 @@ front/.vite/
 uploads/
 *.log
 src/data/runtime_kv.json
+
+# Tauri updater signing key (NEVER commit)
+*.tauri.key
+.tauri/
+
+# PyInstaller build artifacts (should never be committed)
+build_pyinstaller/
+dist_pyinstaller/

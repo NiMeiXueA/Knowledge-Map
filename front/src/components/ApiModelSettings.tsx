@@ -1,6 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { api } from "../api/client";
-import type { Category, CategoryPayload, ModelSettingsPayload } from "../types/paper";
+import type {
+  Category,
+  CategoryPayload,
+  MineruSettingsPayload,
+  ModelSettingsPayload
+} from "../types/paper";
 
 type Props = {
   open: boolean;
@@ -9,7 +14,7 @@ type Props = {
   onCollectionChanged: () => Promise<void>;
 };
 
-type SettingsTab = "api" | "categories";
+type SettingsTab = "api" | "categories" | "mineru";
 
 const providerDefaults = {
   openai: {
@@ -51,12 +56,23 @@ export function ApiModelSettings({ open, onClose, categories, onCollectionChange
   const [categoryForm, setCategoryForm] = useState<CategoryPayload | null>(categories[0] ?? null);
   const [categoryMessage, setCategoryMessage] = useState("");
   const [categorySaving, setCategorySaving] = useState(false);
+  const [mineruForm, setMineruForm] = useState<MineruSettingsPayload>({
+    api_token: "",
+    api_base_url: "https://mineru.net",
+    backend: "pipeline",
+    lang: "ch",
+    api_timeout: 600
+  });
+  const [mineruConfigured, setMineruConfigured] = useState(false);
+  const [mineruSaving, setMineruSaving] = useState(false);
+  const [mineruMessage, setMineruMessage] = useState("");
 
   useEffect(() => {
     if (!open) return;
 
     setActiveTab("api");
     setCategoryMessage("");
+    setMineruMessage("");
 
     api.getModelSettings().then((settings) => {
       setForm((current) => ({
@@ -68,6 +84,17 @@ export function ApiModelSettings({ open, onClose, categories, onCollectionChange
         max_tokens: settings.max_tokens
       }));
       setConfigured(settings.api_key_configured);
+    });
+
+    api.getMineruSettings().then((settings) => {
+      setMineruForm((current) => ({
+        ...current,
+        api_base_url: settings.api_base_url,
+        backend: settings.backend,
+        lang: settings.lang,
+        api_timeout: settings.api_timeout
+      }));
+      setMineruConfigured(settings.api_token_configured);
     });
   }, [open]);
 
@@ -124,6 +151,22 @@ export function ApiModelSettings({ open, onClose, categories, onCollectionChange
       setMessage(error instanceof Error ? error.message : "保存失败");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleSaveMineru = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setMineruSaving(true);
+    setMineruMessage("");
+    try {
+      const summary = await api.saveMineruSettings(mineruForm);
+      setMineruConfigured(summary.api_token_configured);
+      setMineruForm((current) => ({ ...current, api_token: "" }));
+      setMineruMessage("MinerU 配置已保存到后端 .env，后续上传的 PDF 将自动走云端解析。");
+    } catch (error) {
+      setMineruMessage(error instanceof Error ? error.message : "保存失败");
+    } finally {
+      setMineruSaving(false);
     }
   };
 
@@ -212,9 +255,79 @@ export function ApiModelSettings({ open, onClose, categories, onCollectionChange
             >
               设置类别
             </button>
+            <button
+              className={`settings-nav-btn ${activeTab === "mineru" ? "active" : ""}`}
+              type="button"
+              onClick={() => setActiveTab("mineru")}
+            >
+              PDF 解析
+            </button>
           </aside>
           <section className="settings-panel">
-            {activeTab === "api" ? (
+            {activeTab === "mineru" ? (
+              <form className="settings-form" onSubmit={handleSaveMineru}>
+                <div className="category-settings-head">
+                  <div>
+                    <h3>PDF 解析（MinerU 远程）</h3>
+                    <p className="modal-note">
+                      配置后所有 PDF 自动走云端解析，适合扫描版、复杂排版或公式密集的论文。未配置时回退到本地解析（PyMuPDF / pypdf）。
+                      请先在 <a href="https://mineru.net" target="_blank" rel="noreferrer">mineru.net</a> 注册并获取 API Token。
+                    </p>
+                  </div>
+                </div>
+                <label className="search-field">
+                  <span className="search-label">API Token</span>
+                  <input
+                    type="password"
+                    value={mineruForm.api_token}
+                    placeholder={mineruConfigured ? "已配置，可输入新 Token 覆盖" : "请输入 MinerU API Token"}
+                    onChange={(event) => setMineruForm({ ...mineruForm, api_token: event.target.value })}
+                  />
+                </label>
+                <label className="search-field">
+                  <span className="search-label">服务地址</span>
+                  <input
+                    value={mineruForm.api_base_url}
+                    onChange={(event) => setMineruForm({ ...mineruForm, api_base_url: event.target.value })}
+                  />
+                </label>
+                <label className="search-field">
+                  <span className="search-label">解析后端</span>
+                  <select
+                    value={mineruForm.backend}
+                    onChange={(event) => setMineruForm({ ...mineruForm, backend: event.target.value as "pipeline" | "vlm" })}
+                  >
+                    <option value="pipeline">pipeline（通用版，速度快）</option>
+                    <option value="vlm">vlm（VLM 版，复杂版面更强）</option>
+                  </select>
+                </label>
+                <label className="search-field">
+                  <span className="search-label">语言</span>
+                  <input
+                    value={mineruForm.lang}
+                    placeholder="如 ch / en / auto"
+                    onChange={(event) => setMineruForm({ ...mineruForm, lang: event.target.value })}
+                  />
+                </label>
+                <label className="search-field">
+                  <span className="search-label">单次解析超时（秒）</span>
+                  <input
+                    type="number"
+                    min={60}
+                    value={mineruForm.api_timeout}
+                    onChange={(event) => setMineruForm({ ...mineruForm, api_timeout: Number(event.target.value) })}
+                  />
+                </label>
+                <div className="modal-actions">
+                  <button className="hero-action-btn hero-network-btn" disabled={mineruSaving} type="submit">
+                    {mineruSaving ? "保存中..." : "保存配置"}
+                  </button>
+                </div>
+                <p className="search-status">
+                  {mineruMessage || `当前状态：${mineruConfigured ? "MinerU Token 已配置" : "尚未配置 MinerU Token，将使用本地解析"}`}
+                </p>
+              </form>
+            ) : activeTab === "api" ? (
               <form className="settings-form" onSubmit={onSubmit}>
                 <label className="search-field">
                   <span className="search-label">Provider</span>

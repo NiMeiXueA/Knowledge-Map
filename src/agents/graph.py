@@ -12,7 +12,6 @@ from src.agents.innovation_agent import analyze_innovation
 from src.agents.limitation_agent import analyze_limitations
 from src.agents.reflection_agent import reflect_analysis
 from src.agents.source_agent import analyze_source
-from src.config import CATEGORY_MAP
 from src.database.json_store import load_collection, save_analysis_json, upsert_paper
 from src.database.kv import KVRepository
 from src.llm.provider import LLMJSONParseError
@@ -338,20 +337,35 @@ async def save_metadata_to_kv_node(state: PaperAnalysisState) -> PaperAnalysisSt
 
 
 async def classify_paper_node(state: PaperAnalysisState) -> PaperAnalysisState:
-    """论文分类节点：使用LLM将论文分类到预定义类别"""
+    """论文分类节点：使用LLM将论文分类到当前 papers.json 中的类别"""
     _task_update(state, "classification", "正在分析论文分类")
-    result = await classify_paper(state["title"], state.get("abstract", ""), state["raw_text"])
+    # 从 papers.json 读取当前真实分类集合，避免使用硬编码 CATEGORY_MAP 导致孤儿分类
+    categories = load_collection().categories
+    result = await classify_paper(
+        state["title"],
+        state.get("abstract", ""),
+        state["raw_text"],
+        categories,
+    )
     category_id = result.get("category_id") or "other"
-    category = CATEGORY_MAP.get(category_id, CATEGORY_MAP["other"])
-    state["category_id"] = category.id
-    state["category_name"] = category.name
-    state["target_folder"] = category.folder
+
+    # 在动态分类集合里查找；找不到时按 other → 列表第一个 兜底，
+    # 都不行就保留 LLM 返回值（move_pdf_to_category_node 会跳过）
+    matched = next((item for item in categories if item.id == category_id), None)
+    if matched is None:
+        matched = next((item for item in categories if item.id == "other"), None)
+    if matched is None and categories:
+        matched = categories[0]
+
+    state["category_id"] = matched.id if matched else category_id
+    state["category_name"] = matched.name if matched else result.get("category_name", "")
+    state["target_folder"] = matched.folder if matched else ""
     return state
 
 
 async def move_pdf_to_category_node(state: PaperAnalysisState) -> PaperAnalysisState:
     """将PDF文件移动到对应的分类文件夹"""
-    if not state.get("pdf_path"):
+    if not state.get("pdf_path") or not state.get("target_folder"):
         return state
     source = Path(state["pdf_path"])
     if not source.exists():
@@ -472,8 +486,7 @@ async def save_final_json_node(state: PaperAnalysisState) -> PaperAnalysisState:
         source_candidates=state.get("source_candidates", []),
     )
     
-    # 保存到分析结果目录
-    paper.analysis_json_path = str((Path("src") / "data" / "analysis" / f"{paper.id}.json").as_posix())
+    # 保存到分析结果目录（save_analysis_json 内部会把绝对路径回写到 paper.analysis_json_path）
     analysis_path = save_analysis_json(paper)
     upsert_paper(paper)
     state["final_json_path"] = str(analysis_path)

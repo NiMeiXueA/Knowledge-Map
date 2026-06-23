@@ -21,20 +21,29 @@ from src.database.json_store import (
 from src.database.kv import KVRepository
 from src.llm.provider import LLMConfigurationError, LLMJSONParseError
 from src.llm.settings import get_model_settings_summary, save_model_settings
-from src.schemas import CategoryCreateIn, CategoryModel, CategoryUpdateIn, GraphPayload, ModelSettingsIn, PaperAnalysisPatch, UploadResponse
+from src.schemas import CategoryCreateIn, CategoryModel, CategoryUpdateIn, GraphPayload, MineruSettingsIn, MineruSettingsSummary, ModelSettingsIn, PaperAnalysisPatch, UploadResponse
+from src.services.mineru_settings import get_mineru_settings_summary, save_mineru_settings
 from src.services.paper_graph_builder import build_graph_payload
 
 # 创建FastAPI应用实例
 app = FastAPI(title="Knowledge Map API")
 
 # 配置CORS中间件，允许前端跨域访问
+# - http://localhost:\d+   开发模式（Vite 5173 / 8000 等）
+# - http://127.0.0.1:\d+   桌面模式或本地直连
+# - tauri://localhost      macOS / Linux Tauri WebView 的 origin
+# - http://tauri.localhost  Windows Tauri WebView 的 origin
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],  # 允许的前端源
-    allow_origin_regex=r"http://localhost:\d+",  # 允许所有本地端口
-    allow_credentials=True,  # 允许携带凭证
-    allow_methods=["*"],  # 允许所有HTTP方法
-    allow_headers=["*"],  # 允许所有请求头
+    allow_origins=[
+        "http://localhost:5173",
+        "tauri://localhost",
+        "http://tauri.localhost",
+    ],
+    allow_origin_regex=r"http://(localhost|127\.0\.0\.1):\d+",
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # Redis键值存储仓库实例
@@ -160,6 +169,18 @@ async def save_settings(payload: ModelSettingsIn) -> dict:
 async def get_settings() -> dict:
     """获取当前模型设置摘要（不包含API Key明文）"""
     return get_model_settings_summary().model_dump()
+
+
+@app.get("/api/settings/mineru", response_model=MineruSettingsSummary)
+async def get_mineru_settings() -> MineruSettingsSummary:
+    """获取 MinerU 远程解析配置摘要（不含 token 明文）"""
+    return get_mineru_settings_summary()
+
+
+@app.post("/api/settings/mineru", response_model=MineruSettingsSummary)
+async def save_mineru_settings_api(payload: MineruSettingsIn) -> MineruSettingsSummary:
+    """保存 MinerU 远程解析配置到 .env，配置后所有 PDF 自动走云端解析"""
+    return save_mineru_settings(payload)
 
 
 @app.get("/api/graph", response_model=GraphPayload)

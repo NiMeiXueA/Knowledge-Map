@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { api } from "./api/client";
+import { UpdateBanner } from "./components/UpdateBanner";
 import { KnowledgeMapPage } from "./pages/KnowledgeMapPage";
 import { NetworkPage } from "./pages/NetworkPage";
 import { PaperDetailPage } from "./pages/PaperDetailPage";
@@ -19,12 +20,15 @@ export default function App() {
   }, [refresh]);
 
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<KnowledgeMapPage data={data} refresh={refresh} />} />
-        <Route path="/network" element={<NetworkPage data={data} />} />
-        <Route path="/paper/:paperId" element={<PaperDetailPage />} />
-      </Routes>
-    </BrowserRouter>
+    <>
+      <UpdateBanner />
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<KnowledgeMapPage data={data} refresh={refresh} />} />
+          <Route path="/network" element={<NetworkPage data={data} />} />
+          <Route path="/paper/:paperId" element={<PaperDetailPage />} />
+        </Routes>
+      </BrowserRouter>
+    </>
   );
 }

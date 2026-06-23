@@ -6,6 +6,8 @@
 
 [![项目介绍视频](https://img.shields.io/badge/Bilibili-视频介绍-blue)](https://www.bilibili.com/video/BV1cd7w6sEB9/)
 
+> **桌面版**：除下文介绍的 Web 开发模式外，本项目还支持 **Tauri + React + FastAPI sidecar** 桌面应用，双击 exe 即可运行，无需手动装 Redis / 启动后端。桌面版的打包流程、stdout 启动协议、数据目录重定向等说明详见 [`desktop/README_DESKTOP.md`](./desktop/README_DESKTOP.md)。
+
 ## 目录
 
 - [功能特性](#功能特性)
@@ -28,6 +30,10 @@
   - [完整示例：计算机视觉领域](#完整示例计算机视觉领域)
   - [适配检查清单](#适配检查清单)
 - [LangGraph 工作流](#langgraph-工作流)
+- [元数据校验链路](#元数据校验链路)
+- [PDF 解析降级链](#pdf-解析降级链)
+- [论文关系图构建](#论文关系图构建)
+- [API 端点参考](#api-端点参考)
 - [前端使用说明](#前端使用说明)
 - [常见问题](#常见问题)
 
@@ -65,11 +71,24 @@
 Knowledge-Map/
 ├── front/                          # React 前端
 │   ├── src/
-│   │   ├── api/                    # API 调用封装
+│   │   ├── api/                    # API 调用封装（client.ts + config.ts）
 │   │   ├── components/             # UI 组件
-│   │   ├── pages/                  # 页面路由
+│   │   │   ├── ApiModelSettings.tsx     # 模型/分类设置弹窗
+│   │   │   ├── CategoryTimeline.tsx     # 分类时间线（按年份分组）
+│   │   │   ├── PaperCard.tsx            # 论文卡片
+│   │   │   ├── PaperNetworkGraph.tsx    # SVG 关系图（拖拽/缩放/筛选）
+│   │   │   ├── PaperSearchPanel.tsx     # 关键词搜索
+│   │   │   ├── PaperUploadButton.tsx    # 上传入口按钮
+│   │   │   ├── PaperUploadModal.tsx     # 上传弹窗 + 任务轮询
+│   │   │   └── TaskProgressPanel.tsx    # 任务进度条
+│   │   ├── pages/                  # 路由页面
+│   │   │   ├── KnowledgeMapPage.tsx     # 首页：分类时间线
+│   │   │   ├── NetworkPage.tsx          # /network：关系图
+│   │   │   └── PaperDetailPage.tsx      # /paper/:id：论文详情
 │   │   ├── styles/                 # 样式文件
-│   │   └── types/                  # TypeScript 类型定义
+│   │   ├── types/                  # TypeScript 类型定义（与后端 schemas.py 对应）
+│   │   ├── App.tsx                 # 路由 + 顶层状态
+│   │   └── main.tsx                # React 入口
 │   ├── package.json
 │   └── vite.config.ts
 ├── src/                            # FastAPI 后端
@@ -87,22 +106,31 @@ Knowledge-Map/
 │   │   ├── provider.py             # 统一 LLM Provider（OpenAI/Anthropic）
 │   │   └── settings.py             # 模型配置管理
 │   ├── services/                   # 业务逻辑
-│   │   ├── pdf_loader.py           # PDF 文本提取
-│   │   ├── metadata_extractor.py   # 元数据本地提取
-│   │   ├── paper_metadata_pipeline.py  # 元数据增强链路
-│   │   ├── external_paper_lookup.py    # 联网检索
-│   │   ├── paper_file_manager.py       # 论文文件管理
-│   │   ├── paper_graph_builder.py      # 关系图构建
-│   │   └── paper_record_cleaner.py     # 记录清洗
+│   │   ├── pdf_loader.py           # PDF 文本提取（MinerU/PyMuPDF/pypdf + OCR）
+│   │   ├── metadata_extractor.py   # 本地 PDF 元数据提取（正则启发式）
+│   │   ├── paper_metadata_pipeline.py  # 三级元数据校验链路（本地→联网→LLM）
+│   │   ├── external_paper_lookup.py    # Crossref/Semantic Scholar/arXiv 联网检索
+│   │   ├── paper_file_manager.py       # 论文 ID slug + 文件移动
+│   │   ├── paper_graph_builder.py      # 关系图构建（同类演进+引用匹配）
+│   │   └── paper_record_cleaner.py     # paper.short 生成 + idea 清洗
 │   ├── database/                   # 数据存储层
-│   │   ├── json_store.py           # JSON 文件读写
-│   │   ├── kv.py                   # Redis 键值存储封装
-│   │   └── redis_client.py         # Redis 客户端
+│   │   ├── json_store.py           # JSON 文件读写（papers.json + analysis/）
+│   │   ├── kv.py                   # Redis 键值存储封装（KVRepository）
+│   │   └── redis_client.py         # Redis 客户端（含本地文件降级）
 │   ├── tools/                      # 辅助工具
 │   │   └── repair_metadata_records.py
 │   └── data/                       # 运行时数据
 │       ├── papers.json             # 论文集合索引
 │       └── analysis/               # 每篇论文的分析结果
+├── src-tauri/                      # Tauri 桌面壳（Rust）
+│   ├── src/main.rs                 # Tauri 主进程：启动 sidecar + 健康检查 + API URL 注入
+│   ├── tauri.conf.json             # 桌面配置（externalBin/窗口/CSP）
+│   ├── binaries/                   # PyInstaller 产物（knowledge-map-backend-*.exe）
+│   └── Cargo.toml
+├── desktop/                        # 桌面后端打包支持
+│   ├── backend/run_backend.py      # sidecar 入口：端口探测 + stdout 协议
+│   ├── backend/build_backend.ps1   # PyInstaller 打包脚本
+│   └── README_DESKTOP.md           # 桌面版完整说明
 ├── paper/                          # 论文 PDF 存储（按分类组织）
 ├── uploads/                        # 上传暂存目录
 ├── docker-compose.yml              # Redis 编排
@@ -234,7 +262,9 @@ MINERU_API_TIMEOUT=600
 | `venue` | string \| null | 否 | 发表会议/期刊（如 `AISTATS 2017`、`arXiv`） |
 | `abstract` | string | 是 | 论文摘要 |
 | `summary` | string | 是 | 系统生成的中文总结（1-3 句话概括论文贡献） |
-| `idea` | string | 是 | 核心思想/方法（1-2 句，仅描述机制，不含结果性表述） |
+| `idea` | string | 是 | 核心思想/方法（1-2 句，**仅描述机制，不含结果性表述**，详见下方约束） |
+
+> **`idea` 字段硬约束**：`idea` 只能写论文的核心方法机制，1-2 句。提示词与后处理 `normalize_idea_text` 双重保险剔除"实验表明"、"优于其他方法"、"更快收敛"、"性能更好"、"显著提升"等结果性表述，最多保留前 2 句、180 字符。修改 innovation_agent 提示词时不要放松这条约束。
 | `categories` | string[] | 是 | 所属分类 ID 列表（通常只有一个） |
 | `source_path` | string | 是 | 论文 PDF 的存储路径（绝对路径或相对路径） |
 | `innovation` | string | 是 | 创新点总结描述 |
@@ -591,13 +621,141 @@ parse_pdf → extract_metadata → source_agent → save_metadata_to_kv → clas
 
 ---
 
+## 元数据校验链路
+
+`source_agent` 节点实际调用 `src/services/paper_metadata_pipeline.py`，论文标题/作者/年份/DOI 的获取走**三级校验**，保证结果可信：
+
+```text
+本地 PDF 提取 ─┐
+              ├─→ 联网检索候选（Crossref/Semantic Scholar/arXiv）
+              │        ↓
+              │   候选评分（标题相似度 + 作者重合 + DOI/arXiv 匹配 + 渠道加成）
+              │        ↓
+              └─→ LLM 比对：选最可信的标题、作者、年份、来源
+                       ↓ 失败时
+                  按最高分候选自动对齐（fallback）
+```
+
+| 来源 | 实现 | 置信度估算 |
+|------|------|-----------|
+| 本地 PDF | `metadata_extractor.py` 用正则从首页 24 行提取标题/作者/摘要/引用 | 基础 0.25 + 标题长度 ≥ 20（+0.2）+ 有作者（+0.15）+ 摘要 ≥ 120 字（+0.2）+ 有 DOI（+0.15）+ 有 arXiv ID（+0.05），封顶 0.95 |
+| 联网检索 | `external_paper_lookup.py` 按 DOI / arXiv ID / 标题分别查询三个数据源 | 见下方评分公式 |
+| LLM 比对 | `_reconcile_with_llm` 把本地结果 + 候选 + PDF 摘要交给 LLM 选最可信 | LLM 失败时降级到 `_fallback_reconcile`（取候选分最高） |
+
+**候选评分公式**（`_score_candidate`，0-0.99）：
+
+```
+score = 0.45 × 标题相似度（SequenceMatcher）
+      + 0.20 × 作者重合比例
+      + DOI 加成（本地 DOI 精确匹配 +0.30 / 候选 DOI 出现在原文 +0.20）
+      + arXiv 加成（本地 arXiv 精确匹配 +0.30 / 候选 arXiv 出现在原文 +0.15）
+      + 摘要存在（+0.10）
+      + 引用列表加成（每条 +0.02，上限 +0.08）
+      + 渠道加成（DOI 渠道 +0.18 / Crossref 渠道 +0.08 / 其他 +0.05）
+      − 被引嫌疑扣分（疑似被引论文被误识别为正本时 −0.18）
+```
+
+候选数受 `PAPER_SEARCH_MAX_CANDIDATES` 控制（默认 5）。低质量候选（标题相似度 < 0.88 且无 DOI/arXiv 匹配且置信度 < 0.55）会被过滤。
+
+特殊保护：`_candidate_looks_like_reference_target` 专门识别"model-contrastive federated learning"等**被引论文被错误识别为正本**的情况，扣 0.18 分。如果改评分逻辑，不要破坏这个保护。
+
+---
+
+## PDF 解析降级链
+
+`src/services/pdf_loader.py::extract_pdf_text` 按 `PDF_PARSER_BACKEND` 配置降级：
+
+| `PDF_PARSER_BACKEND` | 解析路径 |
+|---------------------|---------|
+| `mineru` | 仅 MinerU（远程 API 优先，无 token 时走本地 CLI），失败抛错 |
+| `auto`（默认） | MinerU → 失败回退 PyMuPDF → 失败回退 pypdf |
+| 其他值 | 直接 PyMuPDF → 失败回退 pypdf |
+
+**MinerU 自身两种模式**（看 `MINERU_API_TOKEN` 是否配置）：
+
+- **远程 API**（推荐用于扫描版/复杂公式 PDF）：申请上传链接 → PUT 上传 PDF → 轮询 `extract-results/batch/{batch_id}` 直到 `state=done` → 下载 `full_zip_url` → 解压读 `full.md`。详见常见问题 Q5。
+- **本地 CLI**：调用 `mineru` 命令行，从 `output/{stem}/{method|vlm|hybrid_method}/` 读 `.md` / `_content_list.json` / `_middle.json`。
+
+**扫描版检测 + OCR**：文本长度 < `OCR_MIN_TEXT_LENGTH`（默认 500）触发 OCR。流程：PyMuPDF 渲染页面为 PNG（matrix 2x）→ pytesseract 识别（`chi_sim+eng`）。`OCR_ENABLED=false` 时跳过 OCR，只用常规文本抽取。
+
+返回结构：
+
+```python
+{
+  "raw_text": "...",          # 提取到的纯文本
+  "page_count": 12,
+  "possibly_scanned_pdf": false,
+  "used_ocr": false,
+  "parser_backend": "pymupdf",  # mineru / pymupdf / pypdf
+  "warning": None               # 警告信息（如 OCR 不可用、扫描件检测等）
+}
+```
+
+---
+
+## 论文关系图构建
+
+`src/services/paper_graph_builder.py` 生成两类关系边：
+
+### `same_category_evolution`（同类别时间演进）
+
+同分类下的论文按 `(year ASC, short.lower())` 排序，**只连相邻两篇**（不跨年跳跃），表达该方向的时间演进：
+
+```
+FedAvg(2017) → FedProx(2018) → MOON(2021) → ...
+```
+
+### `citation`（引用关系）
+
+当论文 A 的本地 `citations` 列表中某条引用的标题能**精确匹配**到论文库中已有论文 B 的标题时，连一条 `B → A` 的边（被引方 → 引用方）：
+
+```
+匹配条件：citation.title.lower() == paper.title.lower()
+边方向：被引论文 → 引用论文
+```
+
+边按 `(source, target, type)` 三元组去重。`sync_relationships_into_papers()` 把关系反向写回 `papers.json` 中每篇论文的 `relationships` 字段——**analysis JSON 中不存 relationships**，只在 `papers.json` 主索引中维护。
+
+前端 `PaperNetworkGraph.tsx` 在 SVG 渲染时会**再次按论文年份调整边的方向**（早 → 晚），并支持节点拖拽、画布平移、分类筛选。9 个分类各自有固定颜色映射（`categoryColors`），新增分类需要补颜色。
+
+---
+
+## API 端点参考
+
+| 方法 | 路径 | 用途 |
+|------|------|------|
+| GET | `/api/health` | 健康检查（Tauri 启动时轮询） |
+| GET | `/api/papers` | 获取所有论文 + 分类（返回 `PaperCollection`） |
+| GET | `/api/papers/{paper_id}` | 获取单篇论文详情 |
+| POST | `/api/papers/upload` | 上传 PDF（multipart/form-data，`files[]` + `references[]` 数量必须一致） |
+| GET | `/api/papers/tasks/{task_id}` | 查询上传任务进度（前端每 1800ms 轮询） |
+| GET | `/api/graph` | 获取关系图数据（`nodes[]` + `links[]`） |
+| GET | `/api/categories` | 获取分类列表 |
+| POST | `/api/categories` | 新增分类 |
+| PUT | `/api/categories/{category_id}` | 更新分类（改 ID 时会同步修正所有论文的 `categories` 字段） |
+| DELETE | `/api/categories/{category_id}` | 删除分类（论文归入 `other`） |
+| GET | `/api/settings/model` | 获取模型设置摘要（不返回 API Key 明文） |
+| POST | `/api/settings/model` | 保存模型设置（写入 `.env`） |
+| PATCH | `/api/papers/{paper_id}/analysis` | 部分更新论文分析结果（用于人工修正） |
+
+**CORS**：放行 `http://localhost:5173`、`tauri://localhost`、`http://tauri.localhost` 以及 `http://(localhost|127\.0\.0\.1):\d+` 正则匹配的来源。
+
+---
+
 ## 前端使用说明
 
-1. **配置 API**：点击首页左上角"设置 API / 模型"按钮，选择 OpenAI 或 Anthropic，填入 API Key
-2. **上传论文**：点击"添加论文"，拖拽或选择 PDF 文件，同时填入 DOI / arXiv ID / 论文链接
-3. **查看进度**：上传后页面会显示当前处理阶段
-4. **浏览分析结果**：论文卡片展示标题、分类、创新点、局限性等
-5. **查看关系图**：点击进入关系图页面，可视化论文间的引用和演进关系
+1. **配置 API**：点击首页"设置"按钮，选择 OpenAI 或 Anthropic，填入 API Key。设置弹窗同时支持分类管理（新增/编辑/删除分类）
+2. **上传论文**：点击"添加论文"，拖拽或选择 PDF 文件，**每个 PDF 必须同时配一行 DOI / arXiv ID / 论文链接**（用作元数据检索 hint，数量必须与文件数一致）
+3. **查看进度**：上传后页面顶部显示当前处理阶段（前端每 1800ms 轮询任务状态）
+4. **浏览分析结果**：首页以**分类时间线**形式展示论文（每个分类 → 年份分组 → 论文卡片），支持关键词搜索（按简称、标题、作者、年份、会议、方向实时筛选）
+5. **查看关系图**：点击右上角"论文关系网"进入 `/network` 页面，可视化论文间的引用和演进关系，支持节点拖拽、画布平移、分类筛选
+6. **论文详情**：点击任意论文卡片进入 `/paper/{id}` 详情页，展示创新点、主要流程图（按步骤可视化）、应用场景、缺陷与局限
+
+前端 API 地址解析（`front/src/api/config.ts`）按优先级：
+
+1. `VITE_API_BASE_URL`（Vite 构建期环境变量，开发模式可用）
+2. `window.__KNOWLEDGE_MAP_API_URL__`（Tauri 桌面模式运行时注入）
+3. 兜底 `http://127.0.0.1:8000`
 
 ---
 
@@ -633,6 +791,37 @@ MINERU_API_TIMEOUT=600
 ```
 
 调用流程：申请上传链接 → PUT 上传 PDF → 轮询结果 → 下载 zip 包。
+
+> **注意**：`MINERU_API_URL` / `MINERU_API_BASE_URL` 必须是 `http://` 或 `https://` 开头的服务地址；`MINERU_API_TOKEN` 才是 Bearer Token，不要把 token 填到 URL 字段里。
+
+### 如何使用 MinerU 本地 CLI
+
+```bash
+PDF_PARSER_BACKEND=auto    # 或 mineru
+MINERU_CLI_COMMAND=mineru  # 默认值；如装在其他路径请指定完整路径
+MINERU_METHOD=auto
+MINERU_BACKEND=pipeline    # pipeline / vlm / hybrid
+MINERU_EFFORT=medium       # low / medium / high
+MINERU_LANG=ch
+```
+
+未配置 `MINERU_API_TOKEN` 时自动走 CLI 模式，会在项目根的临时目录下生成 `output/{stem}/{method或vlm}/`，依次尝试读取 `{stem}.md` → `{stem}_content_list.json` → `{stem}_middle.json`。
+
+### 候选论文检索结果不准怎么办
+
+候选评分公式见 [元数据校验链路](#元数据校验链路)。常见调优方向：
+
+- **标题不准**：本地 PDF 提取的标题过短或过长会影响评分。可以调高 `PAPER_SEARCH_MAX_CANDIDATES`（默认 5）让更多候选参与比对
+- **DOI / arXiv 强匹配**：在上传时尽量提供 DOI 或 arXiv ID，命中精确匹配（+0.30）比纯标题匹配更可靠
+- **被引论文被错误匹配为正本**：`_candidate_looks_like_reference_target` 已经做了保护，但特定场景仍可能误判，可以调整该函数的关键词规则
+
+### 上传的论文被分到"其他"
+
+分类 Agent 不确定时强制输出 `other`，避免误分类。检查：
+
+1. 是否已完成[领域适配](#领域适配指南)（默认是联邦学习分类）
+2. 论文是否跨方向过强，提示词中可以适当放低 `other` 阈值
+3. 反思 Agent 可能在 `repair_targets` 中要求重新分类，看 `reflection_feedback` 中的 `issues`
 
 ---
 

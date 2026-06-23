@@ -1,14 +1,6 @@
 {
   "categories": [
     {
-      "id": "optimization",
-      "name": "基础联邦优化",
-      "folder": "01_基础联邦优化",
-      "why": "关注联邦训练最核心的聚合、收敛和通信效率问题，是后续绝大多数联邦方法的出发点。",
-      "advantages": "概念清晰、方法成熟、适合作为统一比较基线。",
-      "disadvantages": "对异构分布、个性化需求和复杂系统约束的处理有限。"
-    },
-    {
       "id": "personalization",
       "name": "个性化联邦学习",
       "folder": "02_个性化联邦学习",
@@ -23,1365 +15,887 @@
       "why": "解决模型结构不一致、通信预算有限或需要更细粒度知识传递的场景。",
       "advantages": "更灵活地支持异构模型和轻量知识交换。",
       "disadvantages": "蒸馏效果依赖知识载体设计，稳定性和解释性较难保证。"
-    },
-    {
-      "id": "graph",
-      "name": "图联邦学习",
-      "folder": "04_图联邦学习",
-      "why": "面向社交、生物、推荐等图结构数据，把图建模和隐私协同结合起来。",
-      "advantages": "适合复杂关系建模，能保留结构性知识。",
-      "disadvantages": "跨客户端图结构差异大，训练和聚合都更复杂。"
-    },
-    {
-      "id": "generative",
-      "name": "生成式与扩散联邦",
-      "folder": "05_生成式与扩散联邦",
-      "why": "探索联邦场景中的生成模型、扩散模型与 one-shot 协同训练等新范式。",
-      "advantages": "适合高隐私和低通信场景，也能支持数据合成与增强。",
-      "disadvantages": "训练成本高，评价标准和稳定性仍在发展。"
-    },
-    {
-      "id": "prompt",
-      "name": "联邦提示学习与基础模型",
-      "folder": "06_联邦提示学习与基础模型",
-      "why": "关注基础模型时代下，如何通过提示、轻量参数和协同适配实现联邦优化。",
-      "advantages": "参数高效，适配大模型场景更自然。",
-      "disadvantages": "受底座模型约束较强，实验成本通常较高。"
-    },
-    {
-      "id": "system",
-      "name": "系统优化与应用部署",
-      "folder": "07_系统优化与应用部署",
-      "why": "强调资源调度、服务编排、边缘部署和工程落地，是研究走向生产的重要环节。",
-      "advantages": "更贴近真实业务系统与部署约束。",
-      "disadvantages": "系统因素多，实验复现和公平比较更难。"
-    },
-    {
-      "id": "survey",
-      "name": "综述、公平性与背景理论",
-      "folder": "08_综述_公平性_背景理论",
-      "why": "提供路线整理、背景搭建和公平性等横向问题视角，适合作为阅读地图的地基。",
-      "advantages": "帮助快速建立全局认知和比较框架。",
-      "disadvantages": "通常不直接给出可复用训练算法。"
-    },
-    {
-      "id": "other",
-      "name": "其他",
-      "folder": "其他",
-      "why": "用于暂时无法稳定归类、信息不足或方向交叉过强的论文。",
-      "advantages": "避免误分，便于后续人工复审。",
-      "disadvantages": "自动路线图的可解释性会略弱。"
     }
   ],
   "papers": [
     {
-      "id": "fedavg",
-      "short": "FedAvg",
+      "id": "b8c9dff5bf6f41d7a31d137e7cf3de8d-fedavg",
+      "short": "Learning",
       "title": "Communication-Efficient Learning of Deep Networks from Decentralized Data",
       "year": 2017,
       "authors": [
-        "H. Brendan McMahan"
+        "H. Brendan McMahan",
+        "Eider Moore",
+        "Daniel Ramage",
+        "Seth Hampson",
+        "Blaise Aguera y Arcas"
       ],
       "first_author": "H. Brendan McMahan",
-      "venue": "AISTATS 2017",
-      "abstract": "经典联邦学习工作，提出通过本地多步优化与服务器聚合相结合的通信高效训练范式。",
-      "summary": "FedAvg 奠定了现代联邦学习的基础训练框架，通过客户端本地更新后再做全局平均来降低通信频率。",
-      "idea": "通过多客户端本地训练 + 服务端参数平均，在保证隐私边界的同时提升分布式训练效率。",
+      "venue": "AISTATS",
+      "abstract": "Modern mobile devices have access to a wealth of data suitable for learning models, which in turn can greatly improve the user experience on the device. For example, language models can improve speech recognition and text entry, and image models can automatically select good photos. However, this rich data is often privacy sensitive, large in quantity, or both, which may preclude logging to the data center and training there using conventional approaches. We advocate an alternative that leaves the training data distributed on the mobile devices, and learns a shared model by aggregating locally-computed updates. We term this decentralized approach Federated Learning.",
+      "summary": "本文提出联邦学习（Federated Learning）框架，使移动设备能协作训练共享模型而无需集中原始数据，从而保护隐私。核心算法FederatedAveraging通过迭代模型平均结合本地SGD，在非IID和不平衡数据上实现高效通信，将所需通信轮次减少10-100倍。实验在多种模型和数据集上验证了其鲁棒性。",
+      "idea": "每个客户端在本地数据上执行多步SGD更新后，服务器周期性地聚合客户端模型参数进行加权平均，从而在不共享原始数据的情况下训练全局模型，并大幅减少通信次数。",
       "categories": [
         "optimization"
       ],
-      "source_path": "paper/01_基础联邦优化/fedavg.pdf",
-      "innovation": "这篇论文最大的价值在于把“本地训练若干步、再集中聚合”的模式标准化，为后续几乎所有联邦优化方法提供了统一参考点。",
+      "source_path": "D:\\48174\\projects\\Knowledge-Map-App\\src\\data\\paper\\01_基础联邦优化\\b8c9dff5bf6f41d7a31d137e7cf3de8d-fedavg.pdf",
+      "innovation": "首次提出联邦学习概念以应对移动设备数据隐私和通信挑战，并设计了实用的FederatedAveraging算法，实验证明其在非IID数据下具有显著通信效率。",
       "innovation_points": [
         {
-          "point": "提出 FedAvg 聚合范式",
-          "evidence": "论文围绕 iterative model averaging 展开。",
-          "confidence": 0.95
-        }
-      ],
-      "flow_steps": [
-        "服务器初始化全局模型",
-        "客户端本地训练若干轮",
-        "上传模型更新并做平均聚合"
-      ],
-      "applications": "适合作为各类联邦学习系统、算法改进和个性化方法的共同基线。",
-      "limitations": "对 non-IID 数据和系统异构较敏感，客户端漂移问题明显。",
-      "limitation_points": [
-        {
-          "point": "在异构分布下容易出现本地更新方向偏离",
-          "evidence": "后续大量工作围绕 client drift 问题展开。",
-          "type": "inferred",
-          "severity": "high"
-        }
-      ],
-      "citations": [],
-      "relationships": [
-        {
-          "source": "fedavg",
-          "target": "a93e13033a934717852c1182b8d6fd88-fedprox",
-          "type": "same_category_evolution",
-          "reason": "同一类别中的时间演进关系。"
-        },
-        {
-          "source": "fedavg",
-          "target": "1eeb9f563b1d454eb82c88693d80e4ab-moon",
-          "type": "citation",
-          "reason": "引用信息与已有论文标题匹配。"
-        },
-        {
-          "source": "fedavg",
-          "target": "fe0a331f6c634574ba46e7c669af2310-fedas",
-          "type": "citation",
-          "reason": "引用信息与已有论文标题匹配。"
-        },
-        {
-          "source": "fedavg",
-          "target": "747907c35214414c8494868704be8795-scaffold",
-          "type": "citation",
-          "reason": "引用信息与已有论文标题匹配。"
-        }
-      ],
-      "analysis_json_path": "src/data/analysis/fedavg.json",
-      "needs_human_review": false,
-      "created_at": "2026-06-18T00:00:00Z",
-      "updated_at": "2026-06-18T00:00:00Z",
-      "venue_source": "conference",
-      "doi": null,
-      "arxiv_id": null,
-      "source_url": null,
-      "citation_text": null,
-      "bibtex": null,
-      "metadata_confidence": 0.0,
-      "metadata_source_method": null,
-      "metadata_verification_notes": null,
-      "source_candidates": []
-    },
-    {
-      "id": "the-best-of-both-worlds-accurate-global-and-personalized-models-through-federate",
-      "short": "FedHKD",
-      "title": "The Best of Both Worlds: Accurate Global and Personalized Models through Federated Learning with Data-Free Hyper-Knowledge Distillation",
-      "year": 2023,
-      "authors": [
-        "Huancheng Chen",
-        "Johnny Wang",
-        "Haris Vikalo"
-      ],
-      "first_author": "Huancheng Chen",
-      "venue": "arXiv",
-      "abstract": "Heterogeneity of data distributed across clients limits the performance of global models trained through federated learning, especially in the settings with highly imbalanced class distributions of local datasets. In recent years, personalized federated learning (pFL) has emerged as a potential solution to the challenges presented by heterogeneous data. However, existing pFL methods typically enhance performance of local models at the expense of the global model's accuracy. We propose FedHKD (Federated Hyper-Knowledge Distillation), a novel FL algorithm in which clients rely on knowledge distillation (KD) to train local models. In particular, each client extracts and sends to the server the means of local data representations and the corresponding soft predictions -- information that we refer to as ``hyper-knowledge\". The server aggregates this information and broadcasts it to the clients in support of local training. Notably, unlike other KD-based pFL methods, FedHKD does not rely on a public dataset nor it deploys a generative model at the server. We analyze convergence of FedHKD and conduct extensive experiments on visual datasets in a variety of scenarios, demonstrating that FedHKD provides significant improvement in both personalized as well as global model performance compared to state-of-the-art FL methods designed for heterogeneous data settings.",
-      "summary": "论文提出FedHKD，一种面向异构数据的联邦学习算法，通过数据无关的超知识蒸馏在客户端进行本地训练。每个客户端提取本地数据表示的均值及对应软预测（超知识）并上传至服务器，服务器聚合后广播以辅助客户端训练。该方法无需公共数据集或生成模型，在提升个性化模型性能的同时维持高精度的全局模型，解决了现有pFL方法牺牲全局性能的问题。",
-      "idea": "通过客户端共享本地数据表示均值和软预测（超知识），服务器聚合后广播，支持客户端进行知识蒸馏训练，从而在异构数据联邦学习中同时获得准确的全局与个性化模型。",
-      "categories": [
-        "personalization"
-      ],
-      "source_path": "https://arxiv.org/abs/2301.08968v2",
-      "innovation": "提出超知识蒸馏联邦学习框架FedHKD，利用简洁的统计信息（表示均值与软预测）实现数据无关的知识蒸馏，替代公共数据集或生成模型，兼顾全局与个性化性能。",
-      "innovation_points": [
-        {
-          "point": "使用“超知识”（表示均值和软预测）进行联邦知识蒸馏，无需依赖公共数据集或生成模型。",
-          "evidence": "each client extracts and sends to the server the means of local data representations and the corresponding soft predictions -- information that we refer to as 'hyper-knowledge'.  unlike other KD-based pFL methods, FedHKD does not rely on a public dataset nor it deploys a generative model at the server.",
-          "confidence": 0.95
-        },
-        {
-          "point": "通过服务器聚合超知识并广播，支持客户端本地知识蒸馏，平衡全局模型准确性与个性化性能。",
-          "evidence": "The server aggregates this information and broadcasts it to the clients in support of local training. ... providing significant improvement in both personalized as well as global model performance.",
+          "point": "提出联邦学习概念，将模型训练与原始数据访问解耦，强调数据保留在本地以保护隐私。",
+          "evidence": "摘要中明确指出“leaves the training data distributed on the mobile devices, and learns a shared model by aggregating locally-computed updates”，并命名为Federated Learning。",
           "confidence": 0.9
         },
         {
-          "point": "提供收敛性分析理论支撑。",
-          "evidence": "We analyze convergence of FedHKD...",
-          "confidence": 0.85
-        }
-      ],
-      "flow_steps": [
-        "各客户端基于本地数据训练模型，提取表示均值和对应软预测作为超知识。",
-        "客户端将超知识发送至中央服务器。",
-        "服务器聚合超知识（如求平均），并将聚合结果广播到各客户端。",
-        "客户端利用接收的超知识进行知识蒸馏训练，更新本地模型。",
-        "重复上述步骤直至收敛，得到兼顾泛化与个性化的模型。"
-      ],
-      "applications": "视觉分类任务中客户端数据高度异质、类别分布极不平衡的联邦学习场景，如移动设备图像分类、跨机构医疗影像分析等。",
-      "limitations": "实验仅限视觉数据集，在其他数据模态上的泛化性未经验证。",
-      "limitation_points": [
-        {
-          "point": "实验仅在视觉数据集上进行。",
-          "evidence": "摘要中指出：'conduct extensive experiments on visual datasets'",
-          "type": "inferred",
-          "severity": "medium"
-        }
-      ],
-      "citations": [],
-      "relationships": [
-        {
-          "source": "the-best-of-both-worlds-accurate-global-and-personalized-models-through-federate",
-          "target": "fe0a331f6c634574ba46e7c669af2310-fedas",
-          "type": "same_category_evolution",
-          "reason": "同一类别中的时间演进关系。"
-        }
-      ],
-      "analysis_json_path": "src/data/analysis/the-best-of-both-worlds-accurate-global-and-personalized-models-through-federate.json",
-      "needs_human_review": false,
-      "created_at": "2026-06-21T07:39:03.793009Z",
-      "updated_at": "2026-06-21T07:39:03.793009Z",
-      "venue_source": "arxiv_id",
-      "doi": null,
-      "arxiv_id": "2301.08968v2",
-      "source_url": "https://arxiv.org/abs/2301.08968v2",
-      "citation_text": "Huancheng Chen, Johnny Wang, Haris Vikalo (2023). The Best of Both Worlds: Accurate Global and Personalized Models through Federated Learning with Data-Free Hyper-Knowledge Distillation. arXiv.",
-      "bibtex": "@article{huanchengche2023,\n  title = {The Best of Both Worlds: Accurate Global and Personalized Models through Federated Learning with Data-Free Hyper-Knowledge Distillation},\n  author = {Huancheng Chen and Johnny Wang and Haris Vikalo},\n  year = {2023},\n  journal = {arXiv},\n  eprint = {2301.08968v2}\n}",
-      "metadata_confidence": 0.9,
-      "metadata_source_method": "arxiv_id",
-      "metadata_verification_notes": "基于最高分候选自动对齐：包含 arXiv ID，作者数 3",
-      "source_candidates": [
-        {
-          "provider": "reference_lookup",
-          "title": "",
-          "authors": [],
-          "abstract": "",
-          "year": null,
-          "venue": null,
-          "doi": null,
-          "arxiv_id": "2301.08968",
-          "source_url": null,
-          "citation_text": null,
-          "bibtex": null,
-          "confidence": 0.25,
-          "reason": "来自 DOI / arXiv / 论文链接或标题输入。"
-        },
-        {
-          "provider": "arxiv_id",
-          "title": "The Best of Both Worlds: Accurate Global and Personalized Models through Federated Learning with Data-Free Hyper-Knowledge Distillation",
-          "authors": [
-            "Huancheng Chen",
-            "Johnny Wang",
-            "Haris Vikalo"
-          ],
-          "abstract": "Heterogeneity of data distributed across clients limits the performance of global models trained through federated learning, especially in the settings with highly imbalanced class distributions of local datasets. In recent years, personalized federated learning (pFL) has emerged as a potential solution to the challenges presented by heterogeneous data. However, existing pFL methods typically enhance performance of local models at the expense of the global model's accuracy. We propose FedHKD (Federated Hyper-Knowledge Distillation), a novel FL algorithm in which clients rely on knowledge distillation (KD) to train local models. In particular, each client extracts and sends to the server the means of local data representations and the corresponding soft predictions -- information that we refer to as ``hyper-knowledge\". The server aggregates this information and broadcasts it to the clients in support of local training. Notably, unlike other KD-based pFL methods, FedHKD does not rely on a public dataset nor it deploys a generative model at the server. We analyze convergence of FedHKD and conduct extensive experiments on visual datasets in a variety of scenarios, demonstrating that FedHKD provides significant improvement in both personalized as well as global model performance compared to state-of-the-art FL methods designed for heterogeneous data settings.",
-          "year": 2023,
-          "venue": "arXiv",
-          "doi": null,
-          "arxiv_id": "2301.08968v2",
-          "source_url": "https://arxiv.org/abs/2301.08968v2",
-          "citation_text": "Huancheng Chen, Johnny Wang, Haris Vikalo (2023). The Best of Both Worlds: Accurate Global and Personalized Models through Federated Learning with Data-Free Hyper-Knowledge Distillation. arXiv.",
-          "bibtex": "@article{huanchengche2023,\n  title = {The Best of Both Worlds: Accurate Global and Personalized Models through Federated Learning with Data-Free Hyper-Knowledge Distillation},\n  author = {Huancheng Chen and Johnny Wang and Haris Vikalo},\n  year = {2023},\n  journal = {arXiv},\n  eprint = {2301.08968v2}\n}",
-          "confidence": 0.9,
-          "reason": "包含 arXiv ID，作者数 3"
-        }
-      ]
-    },
-    {
-      "id": "a93e13033a934717852c1182b8d6fd88-fedprox",
-      "short": "FedProx",
-      "title": "Federated Optimization in Heterogeneous Networks",
-      "year": 2023,
-      "authors": [
-        "Tian Li",
-        "Anit Kumar Sahu",
-        "Ameet Talwalkar",
-        "Virginia Smith"
-      ],
-      "first_author": "Tian Li",
-      "venue": "IEEE Network",
-      "abstract": "Federated Learning is a distributed learning paradigm with two key challenges that differentiate it from traditional distributed optimization: (1) significant variability in terms of the systems characteristics on each device in the network (systems heterogeneity), and (2) non-identically distributed data across the network (statistical heterogeneity). In this work, we introduce a framework, FedProx, to tackle heterogeneity in federated networks. FedProx can be viewed as a generalization and re-parametrization of FedAvg, the current state-of-the-art method for federated learning. While this re-parameterization makes only minor modifications to the method itself, these modifications have important ramifications both in theory and in practice. Theoretically, we provide convergence guarantees for our framework when learning over data from non-identical distributions (statistical heterogeneity), and while adhering to device-level systems constraints by allowing each participating device to perform a variable amount of work (systems heterogeneity). Practically, we demonstrate that FedProx allows for more robust convergence than FedAvg across a suite of realistic federated datasets. In particular, in highly heterogeneous settings, FedProx demonstrates significantly more stable and accurate convergence behavior relative to FedAvg—improving absolute test accuracy by 22% on average.",
-      "summary": "FedProx是一个联邦优化框架，旨在解决联邦学习中的系统异质性和统计异质性问题。它通过对FedAvg进行泛化，引入近端项来允许设备根据自身能力执行不同数量的局部工作，从而提升训练的稳定性和准确性，在高度异构环境中平均提高22%的测试准确率，并提供了理论收敛保证。",
-      "idea": "通过在客户端局部目标中加入与当前全局模型的近端约束项，限制本地更新偏离过远，并允许不同设备在异构系统条件下执行不同强度的本地优化。",
-      "categories": [
-        "optimization"
-      ],
-      "source_path": "D:\\48174\\projects\\Knowledge-Map\\paper\\01_基础联邦优化\\a93e13033a934717852c1182b8d6fd88-fedprox.pdf",
-      "innovation": "提出FedProx框架，通过近端项泛化FedAvg，使之能够统一处理系统与统计异构性；提供了非IID数据和异构系统条件下的收敛性理论分析；在多种真实联邦数据集上验证了FedProx比FedAvg更稳定、更准确。",
-      "innovation_points": [
-        {
-          "point": "引入近端项来增强联邦学习的稳定性，允许设备进行可变量的局部工作，而不丢失慢速设备的信息。",
-          "evidence": "we propose adding a proximal term to the objective that helps to improve the stability of the method. This term provides a principled way for the server to account for heterogeneity associated with partial information.",
+          "point": "设计FederatedAveraging算法，通过本地SGD和周期性模型平均，有效降低通信成本。",
+          "evidence": "摘要“practical method for the federated learning of deep networks based on iterative model averaging”，以及实验“reduction in required communication rounds by 10–100×”。",
           "confidence": 0.9
         },
         {
-          "point": "在非独立同分布数据和设备仅完成部分工作（系统异构）的条件下，给出了FedProx的收敛性保证。",
-          "evidence": "we provide convergence guarantees for our framework when learning over data from non-identical distributions (statistical heterogeneity), and while adhering to device-level systems constraints by allowing each participating device to perform a variable amount of work (systems heterogeneity).",
-          "confidence": 0.9
-        },
-        {
-          "point": "实验证明FedProx在高度异构设置下比FedAvg有显著提升，平均绝对测试准确率提高22%。",
-          "evidence": "in highly heterogeneous settings, FedProx demonstrates significantly more stable and accurate convergence behavior relative to FedAvg—improving absolute test accuracy by 22% on average.",
+          "point": "系统验证了算法在非IID和不平衡数据分布上的鲁棒性。",
+          "evidence": "摘要“experiments demonstrate the approach is robust to the unbalanced and non-IID data distributions”。",
           "confidence": 0.9
         }
       ],
       "flow_steps": [
-        "服务器初始化全局模型参数w0。",
-        "每轮t，服务器选择K个可用设备子集。",
-        "将当前全局模型w^{t}发送给选中的设备。",
-        "每个设备k在本地以w^{t}为初始点，优化包含近端项的目标函数：F_k(w) + (μ/2)||w - w^{t}||^2，执行若干步（根据自身计算能力可能不同）局部更新，得到w_k^{t}。",
-        "设备将更新后的模型w_k^{t}上传回服务器。",
-        "服务器聚合所有参与设备的模型（如简单平均）得到w^{t+1}。",
-        "重复直至收敛。"
+        "服务器初始化全局模型参数",
+        "每轮随机选择部分客户端参与",
+        "服务器广播当前全局模型给选中客户端",
+        "各客户端利用本地数据执行多轮SGD更新，得到本地模型",
+        "客户端仅将更新后的模型参数（或差分）上传至服务器",
+        "服务器按各客户端数据量加权平均所有上传的模型，更新全局模型",
+        "重复上述通信轮次直至模型收敛"
       ],
-      "applications": "适用于存在高度系统异质性（如移动设备、IoT设备计算能力不同）和统计异质性（各设备本地数据非iid）的联邦学习场景，如移动键盘预测、个性化健康模型训练等。",
-      "limitations": "The paper acknowledges that privacy is not addressed. Additionally, the FedProx algorithm introduces a proximal term hyperparameter that may require careful tuning, and the theoretical guarantees depend on a bounded dissimilarity assumption that may be restrictive.",
+      "applications": "移动设备图像分类；个性化语言模型（语音识别、输入法预测）；其它涉及隐私敏感数据的移动端应用",
+      "limitations": "本研究主要在受控实验环境下验证了联邦平均算法的有效性，尚未解决实际部署中面临的客户端数据动态变化、可用性模式差异及错误处理等关键问题。",
       "limitation_points": [
         {
-          "point": "The work does not address the privacy challenge in federated learning.",
-          "evidence": "Footnote 1: 'Privacy is a third key challenge in the federated setting. While not the focus of this work, ...'",
+          "point": "未考虑实际部署中的客户端数据集变化、可用性相关性及错误更新等实际问题。",
+          "evidence": "“A deployed federated optimization system must also address a myriad of practical issues: client datasets that change as data is added and deleted; client availability that correlates with the local data distribution in complex ways ... and clients that never respond or send corrupted updates. These issues are beyond the scope of the current work.”",
           "type": "paper_claimed",
           "severity": "medium"
         },
         {
-          "point": "FedProx introduces a proximal term with a hyperparameter μ, but the selection of μ is not thoroughly discussed; its sensitivity may affect performance.",
-          "evidence": "The paper proposes adding a proximal term without providing details on how to choose μ automatically.",
-          "type": "inferred",
+          "point": "实验基于同步更新和固定客户端集的受控环境，与真实联邦学习场景中的异步、动态特性存在差距。",
+          "evidence": "“We assume a synchronous update scheme that proceeds in rounds of communication. There is a fixed set of K clients, each with a fixed local dataset.” 以及 “we use a controlled environment that is suitable for experiments, but still addresses the key issues of client availability and unbalanced and non-IID data.”",
+          "type": "paper_claimed",
           "severity": "medium"
-        },
-        {
-          "point": "The convergence analysis relies on a bounded dissimilarity assumption, which may not hold in all real-world federated learning scenarios.",
-          "evidence": "Section 2: 'Our dissimilarity characterization is inspired by the randomized Kaczmarz method ... a similar assumption of which has been used ...' implies an assumption that local functions are somewhat similar.",
-          "type": "inferred",
-          "severity": "low"
         }
       ],
       "citations": [
         {
-          "title": "Tensorflow federated: Machine learning on decentralized data. URL https://www.tensorflow.org/federated.",
-          "authors": [],
-          "year": null,
+          "title": "Long short- ¨ term memory",
+          "authors": [
+            "Sepp Hochreiter"
+          ],
+          "year": 1997,
           "venue": null,
           "doi": null
         },
         {
-          "title": "Abadi, M., Barham, P., Chen, J., Chen, Z., Davis, A., Dean, J., Devin, M., Ghemawat, S., Irving, G., Isard, M., Kudlur, M. K., Levenberg, J., Monga, R., Moore, S., Murray, D. G., Steiner, B., Tucker, P., Vasudevan, V., Warden, P., Wicke, M.",
-          "authors": [],
-          "year": 2016,
+          "title": "LeCun, L",
+          "authors": [
+            "Y. LeCun",
+            "L. Bottou",
+            "Y. Bengio"
+          ],
+          "year": 1998,
           "venue": null,
           "doi": null
         },
         {
-          "title": "Allen-Zhu, Z. How to make the gradients small stochastically: Even faster convex and nonconvex sgd. In Advances in Neural Information Processing Systems, 2018.",
+          "title": "Simple demographics often identify people uniquely",
           "authors": [],
-          "year": 2018,
+          "year": 2000,
           "venue": null,
           "doi": null
         },
         {
-          "title": "Bonawitz, K., Eichner, H., Grieskamp, W., Huba, D., Ingerman, A., Ivanov, V., Kiddon, C., Konecny, J., Mazzocchi, S., McMahan, H. B., Overveldt, T. V., Petrou, D., Ramage, D., and Roselander, J. Towards federated learning at scale: system d",
-          "authors": [],
-          "year": 2019,
+          "title": "A neural probabilistic language model",
+          "authors": [
+            "Yoshua Bengio",
+            "Rejean Ducharme",
+            "Pascal Vincent"
+          ],
+          "year": 2003,
           "venue": null,
           "doi": null
         },
         {
-          "title": "Boyd, S., Parikh, N., Chu, E., Peleato, B., and Eckstein, J. Distributed optimization and statistical learning via the alternating direction method of multipliers. Foundations and Trends in Machine Learning, 2010.",
-          "authors": [],
-          "year": 2010,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "Caldas, S., Wu, P., Li, T., Konečný, J., McMahan, H. B., Smith, V., and Talwalkar, A. Leaf: A benchmark for federated settings. arXiv preprint arXiv:1812.01097, 2018.",
-          "authors": [],
-          "year": 2018,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "Cohen, G., Afshar, S., Tapson, J., and van Schaik, A. Emnist: an extension of mnist to handwritten letters. arXiv preprint arXiv:1702.05373, 2017.",
-          "authors": [],
-          "year": 2017,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "Dean, J., Corrado, G., Monga, R., Chen, K., Devin, M., Le, Q. V., Mao, M., Ranzato, M., Senior, A., Tucker, P., Yang, K., and Ng, A. Large scale distributed deep networks. In Advances in Neural Information Processing Systems, 2012.",
-          "authors": [],
-          "year": 2012,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "Dekel, O., Gilad-Bachrach, R., Shamir, O., and Xiao, L. Optimal Distributed Online Prediction Using Mini-Batches. Journal of Machine Learning Research, 2012.",
-          "authors": [],
-          "year": 2012,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "Ghadimi, S. and Lan, G. Stochastic first-and zeroth-order methods for nonconvex stochastic programming. SIAM Journal on Optimization, 2013.",
-          "authors": [],
-          "year": 2013,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "Go, A., Bhayani, R., and Huang, L. Twitter sentiment classification using distant supervision. CS224N Project Report, Stanford, 2009.",
+          "title": "Learning multiple layers of features from tiny images",
           "authors": [],
           "year": 2009,
           "venue": null,
           "doi": null
         },
         {
-          "title": "Goldblum, M., Reich, S., Fowl, L., Ni, R., Cherepanova, V., and Goldstein, T. Unraveling meta-learning: Understanding feature representations for few-shot tasks. arXiv preprint arXiv:2002.06753, 2020.",
-          "authors": [],
-          "year": 2002,
+          "title": "Distributed training strategies for the structured perceptron",
+          "authors": [
+            "Ryan McDonald",
+            "Keith Hall"
+          ],
+          "year": 2010,
           "venue": null,
           "doi": null
         },
         {
-          "title": "Hao, Y., Rong, J., and Sen, Y. On the linear speedup analysis of communication efficient momentum sgd for distributed non-convex optimization. In International Conference on Machine Learning, 2019.",
-          "authors": [],
-          "year": 2019,
+          "title": "Corrado, Rajat Monga, Kai Chen, Matthieu Devin, Quoc V",
+          "authors": [
+            "Jeffrey Dean",
+            "Greg S. Corrado",
+            "Rajat Monga",
+            "Kai Chen",
+            "Matthieu Devin",
+            "Quoc V. Le",
+            "Mark Z. Mao",
+            "Marc’Aurelio Ranzato",
+            "Andrew Senior",
+            "Paul Tucker",
+            "Ke Yang"
+          ],
+          "year": 2012,
           "venue": null,
           "doi": null
         },
         {
-          "title": "Huang, L., Yin, Y., Fu, Z., Zhang, S., Deng, H., and Liu, D. Loadaboost: Loss-based adaboost federated machine learning on medical data. arXiv preprint arXiv:1811.12629, 2018.",
-          "authors": [],
-          "year": 2018,
+          "title": "Distributed learning, communication complexity and privacy",
+          "authors": [
+            "Maria-Florina Balcan",
+            "Avrim Blum",
+            "Shai Fine",
+            "Yishay Mansour. Distributed learning"
+          ],
+          "year": 2012,
           "venue": null,
           "doi": null
         },
         {
-          "title": "Jeong, E., Oh, S., Kim, H., Park, J., Bennis, M., and Kim, S.-L. Communication-efficient on-device machine learning: Federated distillation and augmentation under non-iid private data. arXiv preprint arXiv:1811.11479, 2018.",
-          "authors": [],
-          "year": 2018,
+          "title": "Hinton",
+          "authors": [
+            "Alex Krizhevsky",
+            "Ilya Sutskever"
+          ],
+          "year": 2012,
           "venue": null,
           "doi": null
         },
         {
-          "title": "Jiang, P. and Agrawal, G. A linear speedup analysis of distributed deep learning with sparse and quantized communication. In Advances in Neural Information Processing Systems, 2018.",
-          "authors": [],
-          "year": 2018,
+          "title": "Communication efficient distributed optimization using an approximate newton-type method",
+          "authors": [
+            "Ohad Shamir",
+            "Nathan Srebro"
+          ],
+          "year": 2013,
           "venue": null,
           "doi": null
         },
         {
-          "title": "Kaczmarz, S. Approximate solution of systems of linear equations. International Journal of Control, 1993.",
-          "authors": [],
-          "year": 1993,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "Khodak, M., Balcan, M.-F. F., and Talwalkar, A. S. Adaptive gradient-based meta-learning methods. In Advances in Neural Information Processing Systems, 2019.",
-          "authors": [],
-          "year": 2019,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "LeCun, Y., Bottou, L., Bengio, Y., and Haffner, P. Gradient-based learning applied to document recognition. Proceedings of the IEEE, 1998.",
-          "authors": [],
-          "year": 1998,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "Li, M., Andersen, D. G., Smola, A. J., and Yu, K. Communication efficient distributed machine learning with the parameter server. In Advances in Neural Information Processing Systems, 2014a.",
-          "authors": [],
-          "year": 2014,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "Li, M., Zhang, T., Chen, Y., and Smola, A. J. Efficient mini-batch training for stochastic optimization. In Conference on Knowledge Discovery and Data Mining, 2014b.",
-          "authors": [],
-          "year": 2014,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "Li, T., Sahu, A., Talwalkar, A., and Smith, V. Federated learning: Challenges, methods, and future directions. arXiv preprint arXiv:1908.07873, 2019.",
-          "authors": [],
-          "year": 1908,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "Li, T., Sahu, A. K., Zaheer, M., Sanjabi, M., Talwalkar, A., and Smith, V. Feddane: A federated newton-type method. arXiv preprint arXiv:2001.01920, 2020.",
-          "authors": [],
-          "year": 2001,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "Lin, T., Stich, S. U., and Jaggi, M. Don't use large mini-batches, use local sgd. In International Conference on Learning Representations, 2020.",
-          "authors": [],
-          "year": 2020,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "McMahan, H. B., Moore, E., Ramage, D., Hampson, S., and Arcas, B. A. y. Communication-efficient learning of deep networks from decentralized data. In International Conference on Artificial Intelligence and Statistics, 2017.",
-          "authors": [],
-          "year": 2017,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "Pennington, J., Socher, R., and Manning, C. Glove: Global vectors for word representation. In Empirical Methods in Natural Language Processing, 2014.",
-          "authors": [],
-          "year": 2014,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "Reddi, S. J., Konečný, J., Richtárik, P., Póczós, B., and Smola, A. Aide: Fast and communication efficient distributed optimization. arXiv preprint arXiv:1608.06879, 2016.",
-          "authors": [],
-          "year": 2016,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "Richtárik, P. and Takáč, M. Distributed coordinate descent method for learning with big data. Journal of Machine Learning Research, 2016.",
-          "authors": [],
-          "year": 2016,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "Schmidt, M. and Roux, N. L. Fast convergence of stochastic gradient descent under a strong growth condition. arXiv preprint arXiv:1308.6370, 2013.",
+          "title": "Consumer data privacy in a networked world: A framework for protecting privacy and promoting innovation in the global digital economy",
           "authors": [],
           "year": 2013,
           "venue": null,
           "doi": null
         },
         {
-          "title": "Shamir, O., Srebro, N., and Zhang, T. Communication-efficient distributed optimization using an approximate newton-type method. In International Conference on Machine Learning, 2014.",
+          "title": "Secure multiparty aggregation with differential privacy: A comparative study",
+          "authors": [
+            "Slawomir Goryczka",
+            "Li Xiong"
+          ],
+          "year": 2013,
+          "venue": null,
+          "doi": null
+        },
+        {
+          "title": "Trading computation for communication: Distributed stochastic dual coordinate ascent",
           "authors": [],
+          "year": 2013,
+          "venue": null,
+          "doi": null
+        },
+        {
+          "title": "Dauphin, Razvan Pascanu, C¸ aglar Gul¨ c¸ehre, KyungHyun Cho, Surya Ganguli, and Yoshua Bengio",
+          "authors": [
+            "Yann N. Dauphin",
+            "Razvan Pascanu",
+            "KyungHyun Cho",
+            "Surya Ganguli",
+            "Yoshua Bengio. Identifying"
+          ],
           "year": 2014,
+          "venue": null,
+          "doi": null
+        },
+        {
+          "title": "Distributed stochastic optimization and learning",
+          "authors": [
+            "Ohad Shamir",
+            "learning. In Communication",
+            "Computing (Allerton"
+          ],
+          "year": 2014,
+          "venue": null,
+          "doi": null
+        },
+        {
+          "title": "Dropout: A simple way to prevent neural networks from overfitting",
+          "authors": [
+            "Nitish Srivastava",
+            "Geoffrey Hinton",
+            "Alex Krizhevsky",
+            "Ilya Sutskever"
+          ],
+          "year": 2014,
+          "venue": null,
+          "doi": null
+        },
+        {
+          "title": "Fast distributed coordinate descent for non- ´ strongly convex losses",
+          "authors": [
+            "Olivier Fercoq",
+            "Zheng Qu",
+            "Peter Richtarik"
+          ],
+          "year": 2014,
+          "venue": null,
+          "doi": null
+        },
+        {
+          "title": "Fractional max-pooling",
+          "authors": [
+            "Benjamin Graham. Fractional max-pooling. CoRR"
+          ],
+          "year": 2014,
+          "venue": null,
+          "doi": null
+        },
+        {
+          "title": "Jordan, and Martin J",
+          "authors": [
+            "John Duchi",
+            "Michael I. Jordan"
+          ],
+          "year": 2014,
+          "venue": null,
+          "doi": null
+        },
+        {
+          "title": "The Algorithmic Foundations of Differential Privacy",
+          "authors": [
+            "Cynthia Dwork"
+          ],
+          "year": 2014,
+          "venue": null,
+          "doi": null
+        },
+        {
+          "title": "/ 11/computer-respond-to-this-email",
+          "authors": [
+            "Greg Corrado. Computer"
+          ],
+          "year": 2015,
+          "venue": null,
+          "doi": null
+        },
+        {
+          "title": "Adding vs",
+          "authors": [
+            "Chenxin Ma",
+            "Virginia Smith",
+            "Martin Jaggi",
+            "Michael I Jordan",
+            "Peter Richtarik"
+          ],
+          "year": 2015,
+          "venue": null,
+          "doi": null
+        },
+        {
+          "title": "Batch normalization: Accelerating deep network training by reducing internal covariate shift",
+          "authors": [
+            "Sergey Ioffe"
+          ],
+          "year": 2015,
+          "venue": null,
+          "doi": null
+        },
+        {
+          "title": "Character-aware neural language models",
+          "authors": [
+            "Yoon Kim",
+            "Yacine Jernite",
+            "David Sontag"
+          ],
+          "year": 2015,
+          "venue": null,
+          "doi": null
+        },
+        {
+          "title": "Communication complexity of distributed convex learning and optimization",
+          "authors": [
+            "Yossi Arjevani"
+          ],
+          "year": 2015,
+          "venue": null,
+          "doi": null
+        },
+        {
+          "title": "Goodfellow, Oriol Vinyals, and Andrew M",
+          "authors": [
+            "Ian J. Goodfellow",
+            "Oriol Vinyals"
+          ],
+          "year": 2015,
+          "venue": null,
+          "doi": null
+        },
+        {
+          "title": "Parallel training of deep neural networks with natural gradient and parameter averaging",
+          "authors": [
+            "Daniel Povey",
+            "Xiaohui Zhang"
+          ],
+          "year": 2015,
+          "venue": null,
+          "doi": null
+        },
+        {
+          "title": "Privacy-preserving deep learning",
+          "authors": [
+            "Reza Shokri",
+            "Communications Security",
+            "CCS ’15"
+          ],
+          "year": 2015,
+          "venue": null,
+          "doi": null
+        },
+        {
+          "title": "The loss surfaces ´ of multilayer networks",
+          "authors": [
+            "Anna Choromanska",
+            "Mikael Henaff",
+            "Michael Mathieu",
+            "Gerard Ben Arous"
+          ],
+          "year": 2015,
+          "venue": null,
+          "doi": null
+        },
+        {
+          "title": "http://www",
+          "authors": [],
+          "year": 2015,
+          "venue": null,
+          "doi": null
+        },
+        {
+          "title": "Brendan McMahan, Felix X",
+          "authors": [
+            "Jakub Konecnˇ y",
+            "H. Brendan McMahan",
+            "Felix X. Yu",
+            "Peter Richtarik",
+            "Ananda Theertha Suresh"
+          ],
+          "year": 2016,
+          "venue": null,
+          "doi": null
+        },
+        {
+          "title": "Brendan McMahan, Sarvar Patel, Daniel Ramage, Aaron Segal, and Karn Seth",
+          "authors": [
+            "Keith Bonawitz",
+            "Vladimir Ivanov",
+            "Ben Kreuter",
+            "Antonio Marcedone",
+            "H. Brendan McMahan",
+            "Sarvar Patel",
+            "Daniel Ramage",
+            "Aaron Segal"
+          ],
+          "year": 2016,
+          "venue": null,
+          "doi": null
+        },
+        {
+          "title": "Deep learning",
+          "authors": [
+            "Ian Goodfellow",
+            "Yoshua Bengio"
+          ],
+          "year": 2016,
+          "venue": null,
+          "doi": null
+        },
+        {
+          "title": "Deep learning with differential privacy",
+          "authors": [
+            "Martin Abadi",
+            "Andy Chu",
+            "Ian Goodfellow",
+            "Brendan McMahan",
+            "Ilya Mironov",
+            "Kunal Talwar",
+            "Communications Security (ACM CCS"
+          ],
+          "year": 2016,
+          "venue": null,
+          "doi": null
+        },
+        {
+          "title": "Revisiting distributed synchronous sgd",
+          "authors": [
+            "Jianmin Chen",
+            "Rajat Monga",
+            "Samy Bengio"
+          ],
+          "year": 2016,
+          "venue": null,
+          "doi": null
+        },
+        {
+          "title": "Smartphone ownership and internet usage continues to climb in emerging economies",
+          "authors": [
+            "Jacob Poushter. Smartphone ownership"
+          ],
+          "year": 2016,
+          "venue": null,
+          "doi": null
+        },
+        {
+          "title": "Taylor",
+          "authors": [
+            "Natalia Neverova",
+            "Christian Wolf",
+            "Griffin Lacey",
+            "Lex Fridman",
+            "Deepak Chandra",
+            "Brandon Barbello"
+          ],
+          "year": 2016,
+          "venue": null,
+          "doi": null
+        },
+        {
+          "title": "http://www.tensorflow",
+          "authors": [],
+          "year": 2016,
+          "venue": null,
+          "doi": null
+        },
+        {
+          "title": "Untraceable electronic mail, return addresses, and digital pseudonyms",
+          "authors": [],
+          "year": null,
+          "venue": null,
+          "doi": null
+        },
+        {
+          "title": "William Shakespeare",
+          "authors": [],
+          "year": null,
           "venue": null,
           "doi": null
         }
       ],
       "relationships": [
         {
-          "source": "a93e13033a934717852c1182b8d6fd88-fedprox",
-          "target": "1eeb9f563b1d454eb82c88693d80e4ab-moon",
-          "type": "same_category_evolution",
-          "reason": "同一类别中的时间演进关系。"
-        },
-        {
-          "source": "a93e13033a934717852c1182b8d6fd88-fedprox",
-          "target": "fe0a331f6c634574ba46e7c669af2310-fedas",
+          "source": "b8c9dff5bf6f41d7a31d137e7cf3de8d-fedavg",
+          "target": "08c90e69c257474f8f9dc64339c570d5-fedntd",
           "type": "citation",
           "reason": "引用信息与已有论文标题匹配。"
         }
       ],
-      "analysis_json_path": "src/data/analysis/a93e13033a934717852c1182b8d6fd88-fedprox.json",
+      "analysis_json_path": "src/data/analysis/b8c9dff5bf6f41d7a31d137e7cf3de8d-fedavg.json",
       "needs_human_review": false,
-      "created_at": "2026-06-18T11:11:07.629301Z",
-      "updated_at": "2026-06-18T11:11:07.629301Z",
-      "venue_source": "journal",
-      "doi": "10.1109/mnet.006.2200437",
-      "arxiv_id": null,
-      "source_url": "https://doi.org/10.1109/mnet.006.2200437",
-      "citation_text": null,
-      "bibtex": null,
-      "metadata_confidence": 0.0,
-      "metadata_source_method": null,
-      "metadata_verification_notes": "修正了标题中的 markdown 残片与作者污染，保留 DOI 对应期刊来源。",
-      "source_candidates": []
+      "created_at": "2026-06-23T08:28:35.769857Z",
+      "updated_at": "2026-06-23T08:28:35.769857Z",
+      "venue_source": "local_pdf",
+      "doi": null,
+      "arxiv_id": "1602.05629",
+      "source_url": "https://proceedings.mlr.press/v54/mcmahan17a",
+      "citation_text": "H. Brendan McMahan, Eider Moore, Daniel Ramage, Seth Hampson, Blaise Aguera y Arcas (2017). Communication-Efficient Learning of Deep Networks from Decentralized Data. AISTATS.",
+      "bibtex": "@inproceedings{mcmahan2017communication,\n  title={Communication-Efficient Learning of Deep Networks from Decentralized Data},\n  author={McMahan, H. Brendan and Moore, Eider and Ramage, Daniel and Hampson, Seth and Ag{\\\"u}era y Arcas, Blaise},\n  booktitle={Artificial Intelligence and Statistics},\n  pages={1273--1282},\n  year={2017},\n  organization={PMLR}\n}",
+      "metadata_confidence": 0.95,
+      "metadata_source_method": "local_pdf",
+      "metadata_verification_notes": "远程候选标题、作者、摘要均不匹配；回退到本地PDF精确匹配，并根据公开记录补全作者、年份、venue和arxiv_id。",
+      "source_candidates": [
+        {
+          "provider": "local_pdf",
+          "title": "Communication-Efficient Learning of Deep Networks from Decentralized Data",
+          "authors": [
+            "H. Brendan McMahan"
+          ],
+          "abstract": "Modern mobile devices have access to a wealth of data suitable for learning models, which in turn can greatly improve the user experience on the device. For example, language models can improve speech recognition and text entry, and image models can automatically select good photos. However, this rich data is often privacy sensitive, large in quantity, or both, which may preclude logging to the data center and training there using conventional approaches. We advocate an alternative that leaves the training data distributed on the mobile devices, and learns a shared model by aggregating locally-computed updates. We term this decentralized approach Federated Learning.",
+          "year": 2012,
+          "venue": null,
+          "doi": null,
+          "arxiv_id": null,
+          "source_url": null,
+          "citation_text": null,
+          "bibtex": null,
+          "confidence": 0.8,
+          "reason": "来自本地 PDF 首页与摘要区域提取。"
+        },
+        {
+          "provider": "arxiv_id",
+          "title": "Distributed Learning, Communication Complexity and Privacy",
+          "authors": [
+            "Maria-Florina Balcan",
+            "Avrim Blum",
+            "Shai Fine",
+            "Yishay Mansour"
+          ],
+          "abstract": "We consider the problem of PAC-learning from distributed data and analyze fundamental communication complexity questions involved. We provide general upper and lower bounds on the amount of communication needed to learn well, showing that in addition to VC-dimension and covering number, quantities such as the teaching-dimension and mistake-bound of a class play an important role. We also present tight results for a number of common concept classes including conjunctions, parity functions, and decision lists. For linear separators, we show that for non-concentrated distributions, we can use a version of the Perceptron algorithm to learn with much less communication than the number of updates given by the usual margin bound. We also show how boosting can be performed in a generic manner in the distributed setting to achieve communication with only logarithmic dependence on 1/epsilon for any concept class, and demonstrate how recent work on agnostic learning from class-conditional queries can be used to achieve low communication in agnostic settings as well. We additionally present an analysis of privacy, considering both differential privacy and a notion of distributional privacy that is especially appealing in this context.",
+          "year": 2012,
+          "venue": "arXiv",
+          "doi": null,
+          "arxiv_id": "1204.3514v3",
+          "source_url": "https://arxiv.org/abs/1204.3514v3",
+          "citation_text": "Maria-Florina Balcan, Avrim Blum, Shai Fine, Yishay Mansour (2012). Distributed Learning, Communication Complexity and Privacy. arXiv.",
+          "bibtex": "@article{mariaflorina2012,\n  title = {Distributed Learning, Communication Complexity and Privacy},\n  author = {Maria-Florina Balcan and Avrim Blum and Shai Fine and Yishay Mansour},\n  year = {2012},\n  journal = {arXiv},\n  eprint = {1204.3514v3}\n}",
+          "confidence": 0.2943,
+          "reason": "标题相似度 0.32，包含 arXiv ID，作者数 4"
+        }
+      ]
     },
     {
-      "id": "1eeb9f563b1d454eb82c88693d80e4ab-moon",
-      "short": "MOON",
-      "title": "The Effect of Hyper-parameters in Model-contrastive Federated Learning Algorithm",
-      "year": 2023,
+      "id": "08c90e69c257474f8f9dc64339c570d5-fedntd",
+      "short": "Federated",
+      "title": "Preservation of the Global Knowledge by Not-True Distillation in Federated Learning",
+      "year": 2022,
       "authors": [
-        "Shen Chen",
-        "Zekai Lin",
-        "Jing Ma"
+        "Gihun Lee",
+        "Minchan Jeong",
+        "Yongjin Shin",
+        "Sangmin Bae",
+        "Se-Young Yun"
       ],
-      "first_author": "Shen Chen",
-      "venue": "2023 IEEE International Conference on Sensors, Electronics and Computer Engineering (ICSECE)",
-      "abstract": "Federated learning enables all parties to perform data analysis and machine learning through the updated use of global models. The key difficulty in federation learning is data heterogeneity, and there are numerous studies that address this challenge but with poor results. The model-contrastive federated learning (MOON) algorithm described in this paper, an improvement on FedAvg, is a Model-level federation learning algorithm that is concise and efficient. The core idea is to train a local model by comparing between global models, which in turn updates the global model without the need for privacy data uploads while model-level training solves the non-HID problem. Widely tests are performed by the authors to confirm the MOON algorithm's efficacy. Contrasting various image databases, lr, $\\mu$ and other different parameters reveals that MOON outperforms other federal learning algorithms in all aspects such as learning accuracy, convergence speed and training time. It demonstrates its advanced and robustness.",
-      "summary": "模型对比联邦学习（MOON）算法，通过引入模型对比损失改进FedAvg，解决联邦学习中的数据异质（非IID）问题。在本地训练中使模型表示接近全局模型而远离历史本地模型，实现模型级对比，无需共享隐私数据。实验表明，MOON在多个数据集和不同超参数下均优于其他联邦学习算法，具有更高的准确率、更快的收敛速度和更短的训练时间，展现了优越性和鲁棒性。",
-      "idea": "在本地训练中同时计算当前模型、全局模型与上一轮本地模型的表示，并加入模型对比损失，使当前表示靠近全局表示、远离历史本地表示，从而稳定非IID场景下的本地更新方向。",
+      "first_author": "Gihun Lee",
+      "venue": "Advances in Neural Information Processing Systems 35",
+      "abstract": "In federated learning, a strong global model is collaboratively learned by aggregating clients’ locally trained models. Although this precludes the need to access clients’ data directly, the global model’s convergence often suffers from data heterogeneity. This study starts from an analogy to continual learning and suggests that forgetting could be the bottleneck of federated learning. We observe that the global model forgets the knowledge from previous rounds, and the local training induces forgetting the knowledge outside of the local distribution. Based on our findings, we hypothesize that tackling down forgetting will relieve the data heterogeneity problem. To this end, we propose a novel and effective algorithm, Federated Not-True Distillation (FedNTD), which preserves the global perspective on locally available data only for the not-true classes. In the experiments, FedNTD shows state-of-the-art performance on various setups without compromising data privacy or incurring additional communication costs.",
+      "summary": "该论文研究了联邦学习中的数据异质性问题，将其视为持续学习中的灾难性遗忘现象。通过实验发现，全局模型在非独立同分布数据下会遗忘先前轮次知识，且局部训练导致遗忘本地分布之外的全局知识。为此，提出FedNTD算法，在本地训练时利用全局模型对本地数据的预测，仅对非真实类别进行知识蒸馏，以保留全局视角，防止遗忘。实验表明，FedNTD在多种设置下达到当时最优性能，且不损害数据隐私或增加通信开销。",
+      "idea": "在联邦学习的本地训练阶段，对每个样本的非真实类别（非标签类别），使用全局模型在该样本上的预测输出作为软目标进行知识蒸馏，从而在优化本地数据的同时保留全局分布知识，防止灾难性遗忘。",
       "categories": [
-        "optimization"
+        "distillation"
       ],
-      "source_path": "D:\\48174\\projects\\Knowledge-Map\\paper\\01_基础联邦优化\\1eeb9f563b1d454eb82c88693d80e4ab-moon.pdf",
-      "innovation": "提出模型层面的对比学习联邦学习框架，通过对比损失规范本地训练，无需额外数据上传或复杂个性化训练，简洁高效地处理数据异质性。",
+      "source_path": "D:\\48174\\projects\\Knowledge-Map-App\\src\\data\\paper\\03_知识蒸馏与异构联邦\\08c90e69c257474f8f9dc64339c570d5-fedntd.pdf",
+      "innovation": "该工作创新性地将联邦学习与持续学习中的遗忘现象进行类比，首次系统分析了联邦学习中的遗忘问题，并提出一种简单有效的局部训练蒸馏方法（FedNTD），仅对非真实类别蒸馏全局知识，无需额外通信且不泄露隐私，同时理论上分析了其对权重对齐和分歧的改善。",
       "innovation_points": [
         {
-          "point": "提出模型对比损失（Model-Contrastive Loss）用于联邦学习本地训练",
-          "evidence": "文中公式(1)定义了ℓ_con，图2显示局部损失包含Model-Contrastive loss。",
+          "point": "首次系统研究了联邦学习中的灾难性遗忘现象，揭示了数据异质性导致全局模型对先前轮次知识的遗忘，以及局部训练对局部外分布知识的遗忘。",
+          "evidence": "Section 2系统分析了遗忘，包括全局模型预测一致性（Figure 2a,b），以及遗忘与数据异质性的关系（Figure 2c）。",
           "confidence": 0.9
         },
         {
-          "point": "利用三种表示（z, z_glob, z_prev）进行对比，使本地模型与全局模型一致，与历史模型分离",
-          "evidence": "MOON原理部分描述：goal of MOON is to keep Z close to Z_glob, Z far from Z_prev。",
+          "point": "提出FedNTD算法，在本地训练时仅对非真实类别使用全局模型预测作为蒸馏目标，保留全局知识，防止遗忘，且不增加额外通信或泄露隐私。",
+          "evidence": "摘要和Section 3描述FedNTD核心机制：'preserves the global perspective on locally available data only for the not-true classes'，'utilizes the global model’s prediction on locally available data, but only for the not-true classes'。",
           "confidence": 0.9
         },
         {
-          "point": "在不共享隐私数据的前提下，通过模型级比较解决非IID问题",
-          "evidence": "摘要和引言提及model-level training solves the non-IID problem，不需要privacy data uploads。",
-          "confidence": 0.9
-        },
-        {
-          "point": "系统性地评估了超参数（如lr, μ）对MOON性能的影响，找到最优组合",
-          "evidence": "标题和摘要指出对比不同参数，显示MOON鲁棒性；实验部分研究不同参数组合。",
-          "confidence": 0.6
-        },
-        {
-          "point": "在CIFAR-10/100等数据集上全面超越FedAvg，收敛更快，准确率更高",
-          "evidence": "实验部分图3显示MOON最终准确率高于FedAvg，且达到相同准确率所需通信轮次更少。",
+          "point": "从权重对齐和权重分歧的角度分析了FedNTD的工作机制，证明其能改善局部模型更新后的权重方向一致性并减少分歧。",
+          "evidence": "Section 5分析了知识保留如何改善weight alignment和weight divergence，并提供实验验证。",
           "confidence": 0.9
         }
       ],
       "flow_steps": [
-        "服务器发送当前全局模型 w^{t} 至所有参与方",
-        "每个参与方下载全局模型并计算其表示 Z_glob = R_{w^{t}}(x)",
-        "参与方利用本地数据执行随机梯度下降，更新本地模型 w_i^{t}",
-        "同时计算本地模型表示 Z = R_{w_i^{t}}(x) 和上一轮模型表示 Z_prev = R_{w_i^{t-1}}(x)",
-        "构造模型对比损失 ℓ_con = -log( exp(sim(z,z_glob)/τ) / [exp(sim(z,z_glob)/τ) + exp(sim(z,z_prev)/τ)] )",
-        "总损失 = 交叉熵损失 + μ * ℓ_con，反向传播更新本地模型",
-        "本地训练完成后，参与方将更新后的本地模型上传至服务器",
-        "服务器聚合所有本地模型（如加权平均），生成新的全局模型 w^{t+1}",
-        "重复上述过程直至全局模型收敛"
+        "服务器将当前全局模型参数分发给选中的客户端。",
+        "每个客户端收到全局模型，以其作为教师模型，固定参数。",
+        "客户端在本地数据集上进行多轮训练：对于每个样本，前向传播获取本地模型和全局模型的logits。",
+        "对全局模型logits进行温度缩放，得到软标签概率分布，但仅使用非真实类别（c ≠ y）对应的概率作为蒸馏目标。",
+        "计算本地模型softmax概率与hard标签的交叉熵损失，以及本地模型软化概率与全局非真实类别软标签之间的KL散度损失（mask掉真实类别）。",
+        "将两个损失加权求和，反向传播更新本地模型参数。",
+        "训练完成后，客户端将更新后的本地模型上传至服务器。",
+        "服务器接收所有参与客户端的本地模型，根据各客户端数据量加权平均，得到新的全局模型。",
+        "返回步骤1进入下一轮通信，直至收敛。"
       ],
-      "applications": "医疗影像分析；金融数据挖掘；自然语言处理；推荐系统；边缘计算场景",
-      "limitations": "The study has several limitations. The experiments are limited to two datasets (CIFAR-10/100) and a single non-IID setting (Dirichlet β=0.5). Although the title suggests an analysis of hyper-parameters, no systematic investigation of learning rate (lr) or contrastive temperature (μ) is presented. The comparison is made only against FedAvg, ignoring other state-of-the-art non-IID federated learning methods. No measures of variability (e.g., standard deviation over multiple runs) are reported, making it difficult to assess the statistical significance of the results. These issues limit the generalizability and robustness claims of the MOON algorithm.",
+      "applications": "数据异构环境下的联邦学习场景，如图像分类、自然语言处理、语音识别等分布式隐私保护模型训练，特别适用于涉及非独立同分布局部数据的边缘设备协同学习。",
+      "limitations": "The experimental validation is limited to small-scale image classification datasets (CIFAR-10/100), leaving open questions about performance on larger, more complex datasets or other tasks. The analysis of forgetting relies on a specific model architecture and dataset, and its generality is not fully established. Although communication costs are not increased, the potential extra local computational overhead from knowledge distillation is not discussed.",
       "limitation_points": [
         {
-          "point": "Limited dataset diversity",
-          "evidence": "Two datasets are used in our experiments, including CIFAR-10 & CIFAR-100.",
+          "point": "Experimental evaluation is confined to CIFAR-10 and CIFAR-100, which are small-scale image classification benchmarks.",
+          "evidence": "The experiments described use only CIFAR-10 and mention CIFAR-100, with no results on larger datasets such as ImageNet or tasks beyond image classification.",
           "type": "inferred",
           "severity": "medium"
         },
         {
-          "point": "Lack of hyper-parameter sensitivity analysis",
-          "evidence": "The abstract claims to contrast lr, μ and other parameters, but the experimental section only presents accuracy curves for the default setting.",
+          "point": "The impact of FedNTD on local computational cost is not addressed.",
+          "evidence": "The abstract highlights no additional communication costs but omits any discussion of the computational overhead from computing global model predictions during local training.",
           "type": "inferred",
-          "severity": "high"
+          "severity": "low"
         },
         {
-          "point": "Insufficient baseline comparison",
-          "evidence": "Only FedAvg is compared; no other federated learning algorithms designed for non-IID data (e.g., FedProx, Scaffold) are evaluated.",
-          "type": "inferred",
-          "severity": "high"
-        },
-        {
-          "point": "No statistical variability reported",
-          "evidence": "The accuracy curves in Figure 3 do not include error bars or standard deviations across multiple runs.",
-          "type": "inferred",
-          "severity": "medium"
-        },
-        {
-          "point": "Single non-IID partition parameter",
-          "evidence": "Dir(β) is set to 0.5 by default; no experiments with other β values are shown.",
+          "point": "Forgetting analysis is based on a specific shallow CNN and a single dataset, which may not generalize to deeper models or more complex scenarios.",
+          "evidence": "The forgetting study uses a 4-layer CNN on CIFAR-10, and it is unclear whether the observations hold for modern architectures or other data domains.",
           "type": "inferred",
           "severity": "medium"
         }
       ],
       "citations": [
         {
-          "title": "Federated learning",
+          "title": "Cifar-10 and cifar-100 datasets",
           "authors": [
-            "Yang Q",
-            "Liu Y",
-            "Cheng Y",
-            "Kang Y",
-            "Chen T"
+            "Alex Krizhevsky",
+            "Vinod Nair",
+            "Geoffrey Hinton. Cifar-10"
           ],
-          "year": 2019,
+          "year": 2009,
+          "venue": null,
+          "doi": null
+        },
+        {
+          "title": "The mnist database of handwritten digit images for machine learning research",
+          "authors": [],
+          "year": 2012,
+          "venue": "IEEE Signal Processing Magazine",
+          "doi": null
+        },
+        {
+          "title": "An empirical investigation of catastrophic forgetting in gradient-based neural networks",
+          "authors": [
+            "Ian J Goodfellow",
+            "Mehdi Mirza",
+            "Da Xiao",
+            "Aaron Courville"
+          ],
+          "year": 2013,
+          "venue": null,
+          "doi": null
+        },
+        {
+          "title": "The stability-plasticity dilemma: Investigating the continuum from catastrophic forgetting to age-limited learning effects",
+          "authors": [
+            "Martial Mermillod",
+            "Aurélia Bugaiska"
+          ],
+          "year": 2013,
+          "venue": null,
+          "doi": null
+        },
+        {
+          "title": "Distilling the knowledge in a neural network",
+          "authors": [
+            "Geoffrey Hinton",
+            "Oriol Vinyals"
+          ],
+          "year": 2015,
           "venue": null,
           "doi": null
         },
         {
           "title": "Federated learning: Strategies for improving communication efficiency",
           "authors": [
-            "H. B",
-            "F. X",
-            "A. T"
-          ],
-          "year": 2016,
-          "venue": "arXiv preprint arXiv:1610",
-          "doi": null
-        },
-        {
-          "title": "Federated machine learning: Concept and applications",
-          "authors": [
-            "Yang Q",
-            "Liu Y",
-            "Chen T"
-          ],
-          "year": 2019,
-          "venue": "ACM Transactions on Intelligent Systems and Technology (TIST)",
-          "doi": null
-        },
-        {
-          "title": "Communication-efficient learning of deep networks from decentralized data",
-          "authors": [
-            "McMahan B",
-            "Moore E",
-            "Ramage D",
-            "Hampson S"
-          ],
-          "year": 2017,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "Model-contrastive federated learning",
-          "authors": [
-            "Li Q",
-            "He B"
-          ],
-          "year": 2021,
-          "venue": "Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition",
-          "doi": null
-        },
-        {
-          "title": "Krizhevsky, A., & Hinton, G",
-          "authors": [],
-          "year": 2009,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "Network in network",
-          "authors": [
-            "Lin M",
-            "Chen Q"
-          ],
-          "year": 2013,
-          "venue": "arXiv preprint arXiv:1312",
-          "doi": null
-        },
-        {
-          "title": "Deep residual learning for image recognition",
-          "authors": [
-            "He K",
-            "Zhang X",
-            "Ren S"
-          ],
-          "year": 2016,
-          "venue": "Proceedings of the IEEE conference on computer vision and pattern recognition",
-          "doi": null
-        },
-        {
-          "title": "Cyclical learning rates for training neural networks",
-          "authors": [
-            "L. N."
-          ],
-          "year": 2017,
-          "venue": "2017 IEEE winter conference on applications of computer vision",
-          "doi": null
-        },
-        {
-          "title": "Comparative review of the intrusion detection systems based on federated learning: Advantages and open challenges",
-          "authors": [
-            "Fedorchenko E",
-            "Novikova E"
-          ],
-          "year": 2022,
-          "venue": null,
-          "doi": null
-        }
-      ],
-      "relationships": [
-        {
-          "source": "1eeb9f563b1d454eb82c88693d80e4ab-moon",
-          "target": "d5cfb5ed140544c9acf0a48b0f3e3022-fedadam",
-          "type": "same_category_evolution",
-          "reason": "同一类别中的时间演进关系。"
-        }
-      ],
-      "analysis_json_path": "src/data/analysis/1eeb9f563b1d454eb82c88693d80e4ab-moon.json",
-      "needs_human_review": false,
-      "created_at": "2026-06-18T11:42:34.914859Z",
-      "updated_at": "2026-06-18T11:42:34.914859Z",
-      "venue_source": "crossref",
-      "doi": "10.1109/icsece58870.2023.10263504",
-      "arxiv_id": null,
-      "source_url": "https://doi.org/10.1109/icsece58870.2023.10263504",
-      "citation_text": "Shen Chen, Zekai Lin, Jing Ma (2023). The Effect of Hyper-parameters in Model-contrastive Federated Learning Algorithm. 2023 IEEE International Conference on Sensors, Electronics and Computer Engineering (ICSECE).",
-      "bibtex": "@article{shenchen2023,\n  title = {The Effect of Hyper-parameters in Model-contrastive Federated Learning Algorithm},\n  author = {Shen Chen and Zekai Lin and Jing Ma},\n  year = {2023},\n  journal = {2023 IEEE International Conference on Sensors, Electronics and Computer Engineering (ICSECE)},\n  doi = {10.1109/icsece58870.2023.10263504}\n}",
-      "metadata_confidence": 0.95,
-      "metadata_source_method": "crossref",
-      "metadata_verification_notes": "标题、作者、会议信息与 DOI 已按 Crossref 结果校正；引用作者与标题按新规则重新解析。",
-      "source_candidates": [
-        {
-          "provider": "local_pdf",
-          "title": "# The Effect of Hyper-parameters in Model-contrastive Federated Learning Algorithm",
-          "authors": [
-            "Shen Chen $^{",
-            "\\dagger}$",
-            "Zekai Lin $^{",
-            "\\dagger}$",
-            "Jing Ma $^{",
-            "\\dagger}$"
-          ],
-          "abstract": "—Federated learning enables all parties to perform data analysis and machine learning through the updated use of global models. The key difficulty in federation learning is data heterogeneity, and there are numerous studies that address this challenge but with poor results. The model-contrastive federated learning (MOON) algorithm described in this paper, an improvement on FedAvg, is a Model-level federation learning algorithm that is concise and efficient. The core idea is to train a local model by comparing between global models, which in turn updates the global model without the need for privacy data uploads while model-level training solves the non-HID problem. Widely tests are performed by the authors to confirm the MOON algorithm's efficacy. Contrasting various image databases, lr, $\\mu$ and other different parameters reveals that MOON outperforms other federal learning algorithms in all aspects such as learning accuracy, convergence speed and training time. It demonstrates its advanced and robustness.",
-          "year": 2020,
-          "venue": null,
-          "doi": null,
-          "arxiv_id": "1610.05492",
-          "source_url": null,
-          "citation_text": null,
-          "bibtex": null,
-          "confidence": 0.8500000000000001,
-          "reason": "来自本地 PDF 文本抽取。"
-        },
-        {
-          "provider": "crossref_title",
-          "title": "The Effect of Hyper-parameters in Model-contrastive Federated Learning Algorithm",
-          "authors": [
-            "Shen Chen",
-            "Zekai Lin",
-            "Jing Ma"
-          ],
-          "abstract": "",
-          "year": 2023,
-          "venue": "2023 IEEE International Conference on Sensors, Electronics and Computer Engineering (ICSECE)",
-          "doi": "10.1109/icsece58870.2023.10263504",
-          "arxiv_id": null,
-          "source_url": "https://doi.org/10.1109/icsece58870.2023.10263504",
-          "citation_text": "Shen Chen, Zekai Lin, Jing Ma (2023). The Effect of Hyper-parameters in Model-contrastive Federated Learning Algorithm. 2023 IEEE International Conference on Sensors, Electronics and Computer Engineering (ICSECE).",
-          "bibtex": "@article{shenchen2023,\n  title = {The Effect of Hyper-parameters in Model-contrastive Federated Learning Algorithm},\n  author = {Shen Chen and Zekai Lin and Jing Ma},\n  year = {2023},\n  journal = {2023 IEEE International Conference on Sensors, Electronics and Computer Engineering (ICSECE)},\n  doi = {10.1109/icsece58870.2023.10263504}\n}",
-          "confidence": 0.4751,
-          "reason": "标题相似度 0.99，包含 DOI，作者数 3"
-        },
-        {
-          "provider": "crossref_title",
-          "title": "Model-Contrastive Federated Learning",
-          "authors": [
-            "Qinbin Li",
-            "Bingsheng He",
-            "Dawn Song"
-          ],
-          "abstract": "",
-          "year": 2021,
-          "venue": "2021 IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)",
-          "doi": "10.1109/cvpr46437.2021.01057",
-          "arxiv_id": null,
-          "source_url": "https://doi.org/10.1109/cvpr46437.2021.01057",
-          "citation_text": "Qinbin Li, Bingsheng He, Dawn Song (2021). Model-Contrastive Federated Learning. 2021 IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR).",
-          "bibtex": "@article{qinbinli2021,\n  title = {Model-Contrastive Federated Learning},\n  author = {Qinbin Li and Bingsheng He and Dawn Song},\n  year = {2021},\n  journal = {2021 IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},\n  doi = {10.1109/cvpr46437.2021.01057}\n}",
-          "confidence": 0.3241,
-          "reason": "标题相似度 0.61，包含 DOI，作者数 3"
-        },
-        {
-          "provider": "crossref_title",
-          "title": "Model Contrastive Federated Learning on Re-Identification",
-          "authors": [
-            "Seongyoon Kim",
-            "Woojin Chung",
-            "Sungwoo Cho",
-            "Yongjin Yang",
-            "Shinhyeok Hwang",
-            "Se-Young Yun"
-          ],
-          "abstract": "",
-          "year": 2024,
-          "venue": "Journal of KIISE",
-          "doi": "10.5626/jok.2024.51.9.841",
-          "arxiv_id": null,
-          "source_url": "https://doi.org/10.5626/jok.2024.51.9.841",
-          "citation_text": "Seongyoon Kim, Woojin Chung, Sungwoo Cho, Yongjin Yang (2024). Model Contrastive Federated Learning on Re-Identification. Journal of KIISE.",
-          "bibtex": "@article{seongyoonkim2024,\n  title = {Model Contrastive Federated Learning on Re-Identification},\n  author = {Seongyoon Kim and Woojin Chung and Sungwoo Cho and Yongjin Yang and Shinhyeok Hwang and Se-Young Yun},\n  year = {2024},\n  journal = {Journal of KIISE},\n  doi = {10.5626/jok.2024.51.9.841}\n}",
-          "confidence": 0.2987,
-          "reason": "标题相似度 0.55，包含 DOI，作者数 6"
-        }
-      ]
-    },
-    {
-      "id": "d5cfb5ed140544c9acf0a48b0f3e3022-fedadam",
-      "short": "FedAdam",
-      "title": "Adaptive Federated Optimization",
-      "year": 2024,
-      "authors": [
-        "Sashank J. Reddi",
-        "Zachary Charles",
-        "Manzil Zaheer",
-        "Zachary Garrett",
-        "Keith Rush",
-        "Jakub Konečný",
-        "Sanjiv Kumar",
-        "H. Brendan McMahan"
-      ],
-      "first_author": "Sashank J. Reddi",
-      "venue": "Proceedings of the AAAI Conference on Artificial Intelligence",
-      "abstract": "Federated learning is a distributed machine learning paradigm in which a large number of clients coordinate with a central server to learn a model without sharing their own training data. Standard federated optimization methods such as Federated Averaging (FEDAVG) are often difficult to tune and exhibit unfavorable convergence behavior. In non-federated settings, adaptive optimization methods have had notable success in combating such issues. In this work, we propose federated versions of adaptive optimizers, including ADAGRAD, ADAM, and YOGI, and analyze their convergence in the presence of heterogeneous data for general nonconvex settings. Our results highlight the interplay between client heterogeneity and communication efficiency. We also perform extensive experiments on these methods and show that the use of adaptive optimizers can significantly improve the performance of federated learning.",
-      "summary": "本文提出了一种通用联邦优化框架，将FedAvg作为特例，并设计了自适应服务器优化器FedAdagrad、FedAdam和FedYogi。在非凸异构数据下进行收敛分析，揭示了客户端异构性与通信效率的权衡。实验表明自适应优化器显著提升了联邦学习的性能。",
-      "idea": "将自适应优化器放在服务器端对客户端平均更新进行再优化，用累积的一阶与二阶信息自适应调整全局步长，同时保持客户端训练与通信开销不变。",
-      "categories": [
-        "optimization"
-      ],
-      "source_path": "D:\\48174\\projects\\Knowledge-Map\\paper\\01_基础联邦优化\\d5cfb5ed140544c9acf0a48b0f3e3022-fedadam.pdf",
-      "innovation": "提出了一个包含服务器和客户端优化器的通用联邦优化框架，首次在联邦学习中采用自适应服务器优化，并提供了理论和实验分析，展示了自适应优化在异构数据下的优势。",
-      "innovation_points": [
-        {
-          "point": "通用联邦优化框架：将FedAvg作为特例，允许灵活选择客户端和服务器优化器。",
-          "evidence": "Algorithm 1 and Section 2: 'We propose a general optimization framework in which (1) clients perform multiple epochs of training using a client optimizer... and (2) server updates its global model by applying a gradient-based server optimizer to the average of the clients' model updates. We show that FEDAVG is the special case where SGD is used as both client and server optimizer and server learning rate is 1.'",
-          "confidence": 0.9
-        },
-        {
-          "point": "自适应服务器优化器：提出FedAdagrad、FedAdam、FedYogi，无需客户端存储优化器状态，适用于跨设备FL。",
-          "evidence": "Section 1 and Table 1: 'By focusing on adaptive server optimization, we enable use of adaptive learning rates without increase in client storage or communication costs...' and Section 4.1 define FedAdagrad, FedAdam, FedYogi.",
-          "confidence": 0.9
-        },
-        {
-          "point": "收敛分析：在非凸设置下分析收敛，揭示局部更新步数与客户端异构性的相互作用。",
-          "evidence": "Section 5: 'We provide convergence analysis in general nonconvex settings... Our results highlight an important interplay between the number of local steps and the heterogeneity among clients.' Theorem 1 and 2.",
-          "confidence": 0.6
-        },
-        {
-          "point": "全面实验基准：7个不同任务（图像和文本），验证自适应优化器效果更好且更易调参。",
-          "evidence": "Section 6 and Table 2: 'We demonstrate strong empirical performance of our adaptive optimizers throughout, improving upon commonly used baselines. Our results show that our methods can be easier to tune...'",
-          "confidence": 0.9
-        }
-      ],
-      "flow_steps": [
-        "1. 服务器初始化全局模型参数x_0。",
-        "2. 对于每个通信轮次t=0,1,...：",
-        "a. 服务器采样客户端子集S_t。",
-        "b. 服务器将当前全局模型x_t广播给所有选中的客户端。",
-        "c. 每个客户端i ∈ S_t：",
-        "- 使用客户端优化器（如SGD）在本地数据上执行K步训练，更新本地模型。",
-        "- 计算本地模型更新Δ_i^t = 本地模型 - 初始模型x_t。",
-        "- 将Δ_i^t发送给服务器。",
-        "d. 服务器聚合更新：Δ_t = average_{i∈S_t} Δ_i^t。",
-        "e. 服务器应用服务器优化器（如Adam）更新全局模型：x_{t+1} = ServerOpt(x_t, Δ_t)。",
-        "3. 重复步骤2直到收敛。"
-      ],
-      "applications": "跨设备联邦学习：适用于移动设备、边缘设备等分布式场景。；自然语言处理：如训练语言模型（如LSTM）在联邦数据上。；计算机视觉：如图像分类任务（如CIFAR-10, CIFAR-100）。；需要自适应学习率的异构数据场景。",
-      "limitations": "The theoretical analysis relies on strong assumptions like bounded gradients and Lipschitz smoothness, which may not be satisfied in all real-world federated learning tasks. Additionally, the experimental evaluation is limited to specific benchmarks and may not generalize to highly heterogeneous or large-scale scenarios.",
-      "limitation_points": [
-        {
-          "point": "Theoretical convergence guarantees depend on the bounded gradient assumption (Assumption 3), which is restrictive and may not hold for many practical nonconvex objectives.",
-          "evidence": "Assumption 3 (Bounded Gradients). The function ... have G-bounded gradients i.e., for any i, x, z we have |[∇f_i(x,z)]_j| ≤ G for all j.",
-          "type": "inferred",
-          "severity": "medium"
-        },
-        {
-          "point": "The experimental setup uses only seven specific image and text tasks, so the generalizability of the proposed methods to other domains or extreme client heterogeneity remains unvalidated.",
-          "evidence": "The experiments consist of seven diverse and representative FL tasks involving both image and text data...",
-          "type": "inferred",
-          "severity": "low"
-        }
-      ],
-      "citations": [
-        {
-          "title": "The TensorFlow Federated Authors. TensorFlow Federated Stack Overflow dataset, 2019. URL https://www.tensorflow.org/federated/api\\_docs/python/tff/simulation/datasets/stackoverflow/load\\_data.",
-          "authors": [],
-          "year": 2019,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "Debraj Basu, Deepesh Data, Can Karakus, and Suhas Diggavi. Qsparse-local-SGD: Distributed SGD with quantization, sparsification and local computations. In Advances in Neural Information Processing Systems, pp. 14668–14679, 2019.",
-          "authors": [],
-          "year": 2019,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "Keith Bonawitz, Hubert Eichner, Wolfgang Grieskamp, Dzmitry Huba, Alex Ingerman, Vladimir Ivanov, Chloé Kiddon, Jakub Konečný, Stefano Mazzocchi, Brendan McMahan, Timon Van Overveldt, David Petrou, Daniel Ramage, and Jason Roselander. Towar",
-          "authors": [],
-          "year": 2019,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "Sebastian Caldas, Peter Wu, Tian Li, Jakub Konečný, H Brendan McMahan, Virginia Smith, and Ameet Talwalkar. LEAF: A benchmark for federated settings. arXiv preprint arXiv:1812.01097, 2018.",
-          "authors": [],
-          "year": 2018,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "Gregory Cohen, Saeed Afshar, Jonathan Tapson, and Andre Van Schaik. EMNIST: Extending MNIST to handwritten letters. In 2017 International Joint Conference on Neural Networks (IJCNN), pp. 2921–2926. IEEE, 2017.",
-          "authors": [],
-          "year": 2017,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "Aaron Defazio and Léon Bottou. On the ineffectiveness of variance reduced optimization for deep learning. arXiv preprint arXiv:1812.04529, 2018.",
-          "authors": [],
-          "year": 2018,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "Aaron Defazio, Francis Bach, and Simon Lacoste-Julien. SAGA: A fast incremental gradient method with support for non-strongly convex composite objectives. In NIPS, pp. 1646–1654, 2014.",
-          "authors": [],
-          "year": 2014,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "John Duchi, Elad Hazan, and Yoram Singer. Adaptive subgradient methods for online learning and stochastic optimization. Journal of Machine Learning Research, 12(Jul):2121–2159, 2011.",
-          "authors": [],
-          "year": 2011,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "Priya Goyal, Piotr Dollár, Ross Girshick, Pieter Noordhuis, Lukasz Wesolowski, Aapo Kyrola, Andrew Tulloch, Yangqing Jia, and Kaiming He. Accurate, large minibatch SGD: Training ImageNet in 1 hour. arXiv preprint arXiv:1706.02677, 2017.",
-          "authors": [],
-          "year": 2017,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "Kevin Hsieh, Amar Phanishayee, Onur Mutlu, and Phillip B Gibbons. The non-IID data quagmire of decentralized machine learning. arXiv preprint arXiv:1910.00189, 2019.",
-          "authors": [],
-          "year": 1910,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "Tzu-Ming Harry Hsu, Hang Qi, and Matthew Brown. Measuring the effects of non-identical data distribution for federated visual classification. arXiv preprint arXiv:1909.06335, 2019.",
-          "authors": [],
-          "year": 1909,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "Alex Ingerman and Krzys Ostrowski. Introducing TensorFlow Federated, 2019. URL https://medium.com/tensorflow/introducing-tensorflow-federated-a4147aa20041.",
-          "authors": [],
-          "year": 2019,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "Rie Johnson and Tong Zhang. Accelerating stochastic gradient descent using predictive variance reduction. In Advances in Neural Information Processing Systems, pp. 315–323, 2013.",
-          "authors": [],
-          "year": 2013,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "Peter Kairouz, H Brendan McMahan, Brendan Avent, Aurélien Bellet, Mehdi Bennis, Arjun Nitin Bhagoji, Keith Bonawitz, Zachary Charles, Graham Cormode, Rachel Cummings, et al. Advances and open problems in federated learning. arXiv preprint a",
-          "authors": [],
-          "year": 1912,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "Sai Praneeth Karimireddy, Satyen Kale, Mehryar Mohri, Sashank J Reddi, Sebastian U Stich, and Ananda Theertha Suresh. SCAFFOLD: Stochastic controlled averaging for on-device federated learning. arXiv preprint arXiv:1910.06378, 2019.",
-          "authors": [],
-          "year": 1910,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "Ahmed Khaled, Konstantin Mishchenko, and Peter Richtárik. First analysis of local GD on heterogeneous data. arXiv preprint arXiv:1909.04715, 2019.",
-          "authors": [],
-          "year": 1909,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "Diederik P. Kingma and Jimmy Ba. Adam: A method for stochastic optimization. In 3rd International Conference on Learning Representations, ICLR 2015, San Diego, CA, USA, May 7-9, 2015, Conference Track Proceedings, 2015.",
-          "authors": [],
-          "year": 2015,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "Alex Krizhevsky and Geoffrey Hinton. Learning multiple layers of features from tiny images. Technical report, Citeseer, 2009.",
-          "authors": [],
-          "year": 2009,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "Tian Li, Anit Kumar Sahu, Manzil Zaheer, Maziar Sanjabi, Ameet Talwalkar, and Virginia Smith. Federated optimization in heterogeneous networks. arXiv preprint arXiv:1812.06127, 2018.",
-          "authors": [],
-          "year": 2018,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "Tian Li, Anit Kumar Sahu, Ameet Talwalkar, and Virginia Smith. Federated learning: Challenges, methods, and future directions. arXiv preprint arXiv:1908.07873, 2019a.",
-          "authors": [],
-          "year": 1908,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "Wei Li and Andrew McCallum. Pachinko allocation: DAG-structured mixture models of topic correlations. In Proceedings of the 23rd international conference on Machine learning, pp. 577–584, 2006.",
-          "authors": [],
-          "year": 2006,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "Xiang Li, Kaixuan Huang, Wenhao Yang, Shusen Wang, and Zhihua Zhang. On the convergence of FedAvg on non-IID data. arXiv preprint arXiv:1907.02189, 2019b.",
-          "authors": [],
-          "year": 1907,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "Xiaoyu Li and Francesco Orabona. On the convergence of stochastic gradient descent with adaptive stepsizes. arXiv preprint arXiv:1805.08114, 2018.",
-          "authors": [],
-          "year": 2018,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "Liangchen Luo, Yuanhao Xiong, Yan Liu, and Xu Sun. Adaptive gradient methods with dynamic bound of learning rate. In 7th International Conference on Learning Representations, ICLR 2019, New Orleans, LA, USA, May 6-9, 2019. OpenReview.net, 2",
-          "authors": [],
-          "year": 2019,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "Brendan McMahan, Eider Moore, Daniel Ramage, Seth Hampson, and Blaise Agüera y Arcas. Communication-efficient learning of deep networks from decentralized data. In Proceedings of the 20th International Conference on Artificial Intelligence ",
-          "authors": [],
-          "year": 2017,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "H. Brendan McMahan and Matthew Streeter. Adaptive bound optimization for online convex optimization. In COLT, 2010a.",
-          "authors": [],
-          "year": 2010,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "H. Brendan McMahan and Matthew J. Streeter. Adaptive bound optimization for online convex optimization. In COLT The 23rd Conference on Learning Theory, 2010b.",
-          "authors": [],
-          "year": 2010,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "Sashank J Reddi, Ahmed Hefny, Suvrit Sra, Barnabás Póczós, and Alex Smola. Stochastic variance reduction for nonconvex optimization. arXiv:1603.06160, 2016.",
-          "authors": [],
-          "year": 2016,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "Sashank J Reddi, Satyen Kale, and Sanjiv Kumar. On the convergence of ADAM and beyond. arXiv preprint arXiv:1904.09237, 2019.",
-          "authors": [],
-          "year": 1904,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "Sebastian U. Stich. Local SGD converges fast and communicates little. In International Conference on Learning Representations, 2019. URL https://openreview.net/forum?id=S1g2JnRcFX.",
-          "authors": [],
-          "year": 2019,
-          "venue": null,
-          "doi": null
-        }
-      ],
-      "relationships": [
-        {
-          "source": "d5cfb5ed140544c9acf0a48b0f3e3022-fedadam",
-          "target": "747907c35214414c8494868704be8795-scaffold",
-          "type": "same_category_evolution",
-          "reason": "同一类别中的时间演进关系。"
-        }
-      ],
-      "analysis_json_path": "src/data/analysis/d5cfb5ed140544c9acf0a48b0f3e3022-fedadam.json",
-      "needs_human_review": false,
-      "created_at": "2026-06-18T10:54:22.026280Z",
-      "updated_at": "2026-06-18T10:54:22.026280Z",
-      "venue_source": "journal",
-      "doi": "10.1609/aaai.v38i15.29566",
-      "arxiv_id": null,
-      "source_url": "https://doi.org/10.1609/aaai.v38i15.29566",
-      "citation_text": null,
-      "bibtex": null,
-      "metadata_confidence": 0.0,
-      "metadata_source_method": null,
-      "metadata_verification_notes": "修正了标题前缀与作者脚注残片，保留 DOI 对应 AAAI 来源。",
-      "source_candidates": []
-    },
-    {
-      "id": "fe0a331f6c634574ba46e7c669af2310-fedas",
-      "short": "FedAs",
-      "title": "FedAS: Bridging Inconsistency in Personalized Federated Learning",
-      "year": 2024,
-      "authors": [
-        "Xiyuan Yang",
-        "Wenke Huang",
-        "Mang Ye"
-      ],
-      "first_author": "Xiyuan Yang",
-      "venue": "2024 IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)",
-      "abstract": "Personalized Federated Learning (PFL) is primarily designed to provide customized models for each client to better fit the non-iid distributed client data, which is a inherent challenge in Federated Learning. However, current PFL methods suffer from inconsistencies in both intra-client and inter-client levels: 1) The intra-client inconsistency stems from the asynchronous update strategy for personalized and shared parameters. In PFL, clients update their shared parameters to communicate and learn from others, while keeping personalized parts unchanged, leading to poor coordination between these two components. 2) The Inter-client inconsistency arises from “stragglers” - inactive clients that communicate and train with the server less frequently. This results in their under-trained personalized models and impedes the collaborative training stage for other clients. In this paper, we present a novel PFL framework named FedAS, which uses Federated Parameter-Alignment and Client-Synchronization to overcome above challenges. Initially, we enhance the localization of global parameters by infusing them with local insights. We make the shared parts learn from previous model, thereby increasing their local relevance and reducing the impact of parameter inconsistency. Furthermore, we design a robust aggregation method to mitigate the impact of stragglers by preventing the incorporation of their under-trained knowledge into aggregated model. Experimental results on Cifar10 and Cifar100 validate the effectiveness of our FedAS in achieving better performance and robustness against data heterogeneity.",
-      "summary": "个性化联邦学习中存在客户端内部不一致（共享与个性化参数异步更新导致协调性差）和客户端间不一致（落后客户端参与聚合引入欠优化知识），影响模型性能。针对这些问题，本文提出FedAS框架，通过参数对齐和客户端同步来解决。参数对齐让共享参数对齐上一轮本地共享参数的输出，以融入本地知识，缓解内部不一致；客户端同步利用Fisher信息矩阵的迹评估模型优化程度，在聚合时赋权，防止落后客户端损害全局模型。实验在Cifar10/100上验证了FedAS的有效性和对数据异质性的鲁棒性。",
-      "idea": "通过让共享参数与上一轮本地共享参数的输出进行对齐来融入本地知识，并基于Fisher信息矩阵的迹衡量模型优化程度进行加权聚合，以缓解落后客户端的影响。",
-      "categories": [
-        "personalization"
-      ],
-      "source_path": "D:\\48174\\projects\\Knowledge-Map\\paper\\02_个性化联邦学习\\fe0a331f6c634574ba46e7c669af2310-fedas.pdf",
-      "innovation": "首次明确界定并将PFL中的不一致归纳为客户端内部和客户端间两个层面；提出参数对齐方法，利用历史本地输出作为对齐目标，使全局共享参数自适应融入本地特征；设计基于FIM迹的聚合策略，自动识别并抑制欠优化模型对全局训练的干扰。",
-      "innovation_points": [
-        {
-          "point": "揭示并形式化个性化联邦学习中的两类不一致：客户端内部异步更新导致共享与个性化参数冲突，以及落后客户端参与聚合引入欠优化知识。",
-          "evidence": "“current personalized federated learning methods generally exhibit inconsistencies on both intra-client and inter-client levels... The intra-client inconsistency stems from the asynchronous update strategy for personalized and shared parameters... The Inter-client inconsistency arises from 'stragglers' - inactive clients that communicate and train with the server less frequently.”",
-          "confidence": 0.9
-        },
-        {
-          "point": "提出参数对齐方法，通过强制新共享参数输出模仿本地上一轮共享参数输出，使全局信息本地化，增强两部分协调性。",
-          "evidence": "“we enhance the localization of global parameters by infusing them with local insights. We make the shared parts learn from previous model, thereby increasing their local relevance... aligning the output vectors of the new shared parts with previous shared parts”",
-          "confidence": 0.9
-        },
-        {
-          "point": "设计基于Fisher信息矩阵迹的客户端同步聚合，利用欠优化模型FIM迹较低的特性自动降低落后客户端权重。",
-          "evidence": "“the trace of the FIM (t-FIM)—tend to be lower for stragglers... we incorporate this insight into server aggregation process by assigning weights based on the t-FIM value.”",
-          "confidence": 0.9
-        }
-      ],
-      "flow_steps": [
-        "客户端接收服务器下发的全局共享参数，保留上一轮本地共享参数副本",
-        "本地参数对齐：计算新旧共享参数在本地数据上的输出，通过损失函数对齐，使新共享参数学习本地知识",
-        "更新个性化参数和共享参数（结合对齐损失和任务损失进行训练）",
-        "客户端计算本地模型的Fisher信息矩阵迹（t-FIM）指标",
-        "上传更新后的共享参数和t-FIM值至服务器",
-        "服务器根据t-FIM值计算各客户端的聚合权重，加权聚合共享参数得到新全局共享参数",
-        "服务器分发全局共享参数，进入下一轮通信"
-      ],
-      "applications": "数据异构场景下的个性化联邦学习；移动设备个性化推荐与预测；医疗数据联邦学习中的模型个性化；分散式物联网设备协同学习",
-      "limitations": "本文存在若干局限：仅在小型数据集上验证；未分析超参数敏感性；引入FIM计算可能带来额外开销；方法适用范围限于参数解耦式个性化联邦学习；未提供理论收敛性分析。",
-      "limitation_points": [
-        {
-          "point": "实验仅在Cifar10和Cifar100数据集上进行，缺乏在更大规模或真实世界数据集上的验证。",
-          "evidence": "摘要和引言中仅提及在Cifar10和Cifar100上的实验结果，未涉及其它数据集。",
-          "type": "inferred",
-          "severity": "medium"
-        },
-        {
-          "point": "未讨论超参数（如对齐强度、聚合权重等）对性能的影响，可能导致方法鲁棒性不明。",
-          "evidence": "全文中未提供超参数敏感性分析或消融研究相关描述。",
-          "type": "inferred",
-          "severity": "low"
-        },
-        {
-          "point": "引入Fisher信息矩阵计算客户端优化程度，可能增加客户端的计算负担，但文中未分析计算开销。",
-          "evidence": "方法描述中提到利用FIM和t-FIM，但未给出计算成本或效率分析。",
-          "type": "inferred",
-          "severity": "medium"
-        },
-        {
-          "point": "所提方法建立在参数解耦（将模型分为共享的特征提取器和个性化分类器）的个性化策略上，可能不适用于其他类型的个性化联邦学习架构。",
-          "evidence": "引言中指出主流PFL采用特征提取器与分类器解耦，并据此设计FedAS，未讨论其泛化性。",
-          "type": "inferred",
-          "severity": "medium"
-        },
-        {
-          "point": "缺乏理论收敛性证明，仅凭实验结果难以完全保证算法在各种设置下的收敛行为。",
-          "evidence": "全文未提供任何收敛性分析或理论保证。",
-          "type": "inferred",
-          "severity": "low"
-        }
-      ],
-      "citations": [
-        {
-          "title": "Natural gradient works efficiently in learning",
-          "authors": [],
-          "year": 1998,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "Learning multiple layers of features from tiny images",
-          "authors": [
-            "Alex Krizhevsky",
-            "Geoffrey Hinton"
-          ],
-          "year": 2009,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "Optimizing neural networks with kronecker-factored approximate curvature",
-          "authors": [
-            "Martens"
-          ],
-          "year": 2015,
-          "venue": "ICML",
-          "doi": null
-        },
-        {
-          "title": "Layer-wise relevance propagation for neural networks with local renormalization layers",
-          "authors": [
-            "Alexander Binder",
-            "Grégoire Montavon",
-            "Sebastian Lapuschkin",
-            "Klaus-Robert Müller"
+            "Jakub Konecnˇ y",
+            "H Brendan McMahan",
+            "Felix X Yu",
+            "Peter Richtárik",
+            "Ananda Theertha Suresh"
           ],
           "year": 2016,
           "venue": null,
           "doi": null
         },
         {
-          "title": "A tutorial on fisher information",
+          "title": "Federated optimiza- \\` tion: Distributed machine learning for on-device intelligence",
           "authors": [
-            "Alexander Ly",
-            "Maarten Marsman",
-            "Josine Verhagen",
-            "Raoul PPP Grasman"
+            "Jakub Konecnˇ y",
+            "H Brendan McMahan",
+            "Daniel Ramage"
           ],
-          "year": 2017,
+          "year": 2016,
           "venue": null,
           "doi": null
         },
         {
           "title": "Communication-efficient learning of deep networks from decentralized data",
           "authors": [
-            "McMahan"
+            "Brendan McMahan",
+            "Eider Moore",
+            "Daniel Ramage",
+            "Seth Hampson",
+            "pages 1273–1282. PMLR"
           ],
           "year": 2017,
-          "venue": "InAISTATS",
+          "venue": null,
           "doi": null
         },
         {
-          "title": "Rusu, Kieran Milan, John Quan, Tiago Ramalho, Agnieszka Grabska-Barwinska, Demis Hassabis, Claudia Clopath, Dharshan Kumaran, and Raia Hadsell",
+          "title": "Improved regularization of convolutional neural networks with cutout",
+          "authors": [
+            "Terrance DeVries"
+          ],
+          "year": 2017,
+          "venue": null,
+          "doi": null
+        },
+        {
+          "title": "Learning without forgetting",
+          "authors": [
+            "Zhizhong Li"
+          ],
+          "year": 2017,
+          "venue": null,
+          "doi": null
+        },
+        {
+          "title": "Overcoming catastrophic forgetting in neural networks",
           "authors": [
             "James Kirkpatrick",
             "Razvan Pascanu",
             "Neil Rabinowitz",
             "Joel Veness",
             "Guillaume Desjardins",
-            "Andrei A. Rusu",
+            "Andrei A Rusu",
             "Kieran Milan",
             "John Quan",
             "Tiago Ramalho",
-            "Agnieszka Grabska-Barwinska",
-            "Demis Hassabis",
-            "Claudia Clopath",
-            "Dharshan Kumaran"
+            "Agnieszka Grabska-Barwinska"
           ],
           "year": 2017,
           "venue": null,
           "doi": null
         },
         {
-          "title": "Federated learning with personalization layers",
+          "title": "Cinic-10 is not imagenet or cifar-10",
           "authors": [
-            "Manoj Ghuhan Arivazhagan",
-            "Vinay Aggarwal",
-            "Aaditya Kumar Singh"
+            "Luke N Darlow",
+            "Elliot J Crowley",
+            "Antreas Antoniou"
+          ],
+          "year": 2018,
+          "venue": null,
+          "doi": null
+        },
+        {
+          "title": "Efficient lifelong learning with a-gem",
+          "authors": [
+            "Arslan Chaudhry",
+            "Marc’Aurelio Ranzato",
+            "Marcus Rohrbach"
+          ],
+          "year": 2018,
+          "venue": null,
+          "doi": null
+        },
+        {
+          "title": "Memory aware synapses: Learning what (not) to forget",
+          "authors": [
+            "Rahaf Aljundi",
+            "Francesca Babiloni",
+            "Mohamed Elhoseiny",
+            "Marcus Rohrbach"
+          ],
+          "year": 2018,
+          "venue": null,
+          "doi": null
+        },
+        {
+          "title": "Riemannian walk for incremental learning: Understanding forgetting and intransigence",
+          "authors": [
+            "Arslan Chaudhry",
+            "Puneet K Dokania",
+            "Thalaiyasingam Ajanthan"
+          ],
+          "year": 2018,
+          "venue": null,
+          "doi": null
+        },
+        {
+          "title": "Advances and open problems in federated learning",
+          "authors": [
+            "Peter Kairouz",
+            "H Brendan McMahan",
+            "Brendan Avent",
+            "Aurélien Bellet",
+            "Mehdi Bennis",
+            "Arjun Nitin Bhagoji",
+            "Keith Bonawitz",
+            "Zachary Charles",
+            "Graham Cormode",
+            "Rachel Cummings"
           ],
           "year": 2019,
           "venue": null,
           "doi": null
         },
         {
-          "title": "Think locally, act glob-ally: Federated learning with local and global representations",
+          "title": "Continual lifelong learning with neural networks: A review",
           "authors": [
-            "Pu Liang"
+            "German I Parisi",
+            "Ronald Kemker",
+            "Jose L Part",
+            "Christopher Kanan"
           ],
           "year": 2019,
-          "venue": "NeurlPS",
+          "venue": null,
           "doi": null
         },
         {
-          "title": "Decou-pling representation and classifier for long-tailed recognition",
+          "title": "Fedmd: Heterogenous federated learning via model distillation",
           "authors": [
-            "Kang"
+            "Daliang Li"
+          ],
+          "year": 2019,
+          "venue": null,
+          "doi": null
+        },
+        {
+          "title": "Measuring the effects of non-identical data distribution for federated visual classification",
+          "authors": [
+            "Tzu-Ming Harry Hsu",
+            "Hang Qi"
+          ],
+          "year": 2019,
+          "venue": null,
+          "doi": null
+        },
+        {
+          "title": "On the convergence of fedavg on non-iid data",
+          "authors": [
+            "Xiang Li",
+            "Kaixuan Huang",
+            "Wenhao Yang",
+            "Shusen Wang"
+          ],
+          "year": 2019,
+          "venue": null,
+          "doi": null
+        },
+        {
+          "title": "Class-incremental learning: survey and performance evaluation on image classification",
+          "authors": [
+            "Marc Masana",
+            "Xialei Liu",
+            "Bartlomiej Twardowski",
+            "Mikel Menta",
+            "Andrew D Bagdanov"
           ],
           "year": 2020,
-          "venue": "ICLR",
+          "venue": null,
+          "doi": null
+        },
+        {
+          "title": "Continual learning in low-rank orthogonal subspaces",
+          "authors": [
+            "Arslan Chaudhry",
+            "Naeemullah Khan",
+            "Puneet K Dokania"
+          ],
+          "year": 2020,
+          "venue": null,
+          "doi": null
+        },
+        {
+          "title": "Cpr: Classifier-projection regularization for continual learning",
+          "authors": [
+            "Sungmin Cha",
+            "Hsiang Hsu",
+            "Taebaek Hwang",
+            "Flavio P Calmon"
+          ],
+          "year": 2020,
+          "venue": null,
           "doi": null
         },
         {
@@ -1390,6 +904,27 @@
             "Tao Lin",
             "Lingjing Kong",
             "Sebastian U Stich"
+          ],
+          "year": 2020,
+          "venue": null,
+          "doi": null
+        },
+        {
+          "title": "Fedbe: Making bayesian model ensemble applicable to federated learning",
+          "authors": [
+            "Hong-You Chen"
+          ],
+          "year": 2020,
+          "venue": null,
+          "doi": null
+        },
+        {
+          "title": "Federated learning: A survey on enabling technologies, protocols, and applications",
+          "authors": [
+            "Mohammed Aledhari",
+            "Rehma Razzak",
+            "Reza M Parizi",
+            "applications. IEEE Access"
           ],
           "year": 2020,
           "venue": null,
@@ -1409,82 +944,81 @@
         {
           "title": "Federated optimization in heterogeneous networks",
           "authors": [
-            "Li"
+            "Tian Li",
+            "Anit Kumar Sahu",
+            "Manzil Zaheer",
+            "Maziar Sanjabi",
+            "Ameet Talwalkar"
           ],
           "year": 2020,
-          "venue": "MLSys",
-          "doi": null
-        },
-        {
-          "title": "Fedpaq: A communication-efficient federated learning method with pe-riodic averaging and quantization",
-          "authors": [
-            "Reisizadeh"
-          ],
-          "year": 2020,
-          "venue": "AISTATS",
-          "doi": null
-        },
-        {
-          "title": "Personalized federated learning with more au envelopes",
-          "authors": [
-            "Canh"
-          ],
-          "year": 2020,
-          "venue": "NeurIPS",
-          "doi": null
-        },
-        {
-          "title": "Scaffold: Stochastic controlled averaging for fed-erated learning",
-          "authors": [
-            "Praneeth Karimireddy"
-          ],
-          "year": 2020,
-          "venue": "ICML",
-          "doi": null
-        },
-        {
-          "title": "U veqfed: Universal vector quanti-zation for federated learning",
-          "authors": [
-            "Shlezinger"
-          ],
-          "year": 2020,
-          "venue": "IEEE TSP",
-          "doi": null
-        },
-        {
-          "title": "Advances and open problems in federated learning",
-          "authors": [
-            "Peter Kairouz",
-            "H Brendan McMahan",
-            "Brendan Avent",
-            "Aurélien Bellet",
-            "Mehdi Bennis",
-            "Arjun Nitin Bhagoji",
-            "Kallista Bonawitz",
-            "Zachary Charles",
-            "Graham Cormode",
-            "Rachel Cummings"
-          ],
-          "year": 2021,
           "venue": null,
           "doi": null
         },
         {
-          "title": "Ditto: Fair and robust federated learning through per-sonalization",
+          "title": "Fedml: A research library and benchmark for federated machine learning",
           "authors": [
-            "Li"
+            "Chaoyang He",
+            "Songze Li",
+            "Jinhyun So",
+            "Xiao Zeng",
+            "Mi Zhang",
+            "Hongyi Wang",
+            "Xiaoyang Wang",
+            "Praneeth Vepakomma",
+            "Abhishek Singh",
+            "Hang Qiu"
           ],
-          "year": 2021,
-          "venue": "I CML",
+          "year": 2020,
+          "venue": null,
           "doi": null
         },
         {
-          "title": "Exploiting shared representations for personal-ized federated learning",
+          "title": "Orthogonal gradient descent for continual learning",
           "authors": [
-            "Collins"
+            "Mehrdad Farajtabar",
+            "Navid Azizan",
+            "Alex Mott",
+            "pages 3762–3773. PMLR"
           ],
-          "year": 2021,
-          "venue": "ICML",
+          "year": 2020,
+          "venue": null,
+          "doi": null
+        },
+        {
+          "title": "Scaffold: Stochastic controlled averaging for federated learning",
+          "authors": [
+            "Sai Praneeth Karimireddy",
+            "Satyen Kale",
+            "Mehryar Mohri",
+            "Sashank Reddi",
+            "Sebastian Stich",
+            "pages 5132–5143. PMLR"
+          ],
+          "year": 2020,
+          "venue": null,
+          "doi": null
+        },
+        {
+          "title": "Tighter theory for local sgd on identical and heterogeneous data",
+          "authors": [
+            "Ahmed Khaled",
+            "Konstantin Mishchenko",
+            "pages 4519–4529. PMLR"
+          ],
+          "year": 2020,
+          "venue": null,
+          "doi": null
+        },
+        {
+          "title": "Using hindsight to anchor past knowledge in continual learning",
+          "authors": [
+            "Arslan Chaudhry",
+            "Albert Gordo",
+            "Puneet Kumar Dokania",
+            "Philip Torr"
+          ],
+          "year": 2020,
+          "venue": null,
           "doi": null
         },
         {
@@ -1501,74 +1035,49 @@
           "doi": null
         },
         {
-          "title": "Model-contrastive federated learning",
-          "authors": [
-            "Qinbin Li",
-            "Bingsheng He"
-          ],
-          "year": 2021,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "Fed-babu: Toward enhanced representation for federated image classification",
-          "authors": [
-            "HOON OH"
-          ],
-          "year": 2022,
-          "venue": "ICLR",
-          "doi": null
-        },
-        {
-          "title": "Feddc: Federated learning with non-iid data via local drift decoupling and correction",
-          "authors": [
-            "Liang Gao",
-            "Huazhu Fu",
-            "Li Li",
-            "Yingwen Chen",
-            "Ming Xu",
-            "correction. In CVPR"
-          ],
-          "year": 2022,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "Federated learning for face recognition with gradient correction",
-          "authors": [
-            "Yifan Niu"
-          ],
-          "year": 2022,
-          "venue": null,
-          "doi": null
-        },
-        {
           "title": "Federated learning on non-iid data silos: An experimental study",
           "authors": [
             "Qinbin Li",
             "Yiqun Diao",
             "Quan Chen"
           ],
-          "year": 2022,
+          "year": 2021,
           "venue": null,
           "doi": null
         },
         {
-          "title": "Few-shot model agnostic federated learning",
+          "title": "Model-contrastive federated learning",
           "authors": [
-            "Wenke Huang",
-            "Mang Ye",
-            "Xiang Gao"
+            "Qinbin Li",
+            "Bingsheng He",
+            "Pattern Recognition"
           ],
-          "year": 2022,
+          "year": 2021,
           "venue": null,
           "doi": null
         },
         {
-          "title": "Learn from others and be yourself in heterogeneous federated learning",
+          "title": "No fear of heterogeneity: Classifier calibration for federated learning with non-iid data",
           "authors": [
-            "Wenke Huang",
-            "Mang Ye"
+            "Mi Luo",
+            "Fei Chen",
+            "Dapeng Hu",
+            "Yifan Zhang",
+            "Jian Liang"
+          ],
+          "year": 2021,
+          "venue": null,
+          "doi": null
+        },
+        {
+          "title": "Federated class-incremental learning",
+          "authors": [
+            "Jiahua Dong",
+            "Lixu Wang",
+            "Zhen Fang",
+            "Gan Sun",
+            "Shichao Xu",
+            "Xiao Wang"
           ],
           "year": 2022,
           "venue": null,
@@ -1581,1120 +1090,57 @@
             "Taojiannan Yang",
             "Pu Wang",
             "Minwoo Lee",
-            "Zhengming Ding"
+            "Zhengming Ding",
+            "Pattern Recognition"
           ],
           "year": 2022,
           "venue": null,
           "doi": null
         },
         {
-          "title": "On bridging generic and personalized federated learning for image classification",
+          "title": "Catastrophic interference in connectionist networks: The sequential learning problem",
           "authors": [
-            "Chen"
+            "Michael McCloskey",
+            "pages 109–165. Elsevier"
           ],
-          "year": 2022,
-          "venue": "ICLR",
-          "doi": null
-        },
-        {
-          "title": "Robust federated learning with noisy and heterogeneous clients",
-          "authors": [
-            "Xiuwen Fang"
-          ],
-          "year": 2022,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "To-wards federated learning against noisy labels via local self-regularization",
-          "authors": [
-            "Jiang"
-          ],
-          "year": 2022,
-          "venue": "CIKM",
-          "doi": null
-        },
-        {
-          "title": "Dynamic per-sonalized federated learning with adaptive differential pri-vacy",
-          "authors": [
-            "Yang"
-          ],
-          "year": 2023,
-          "venue": "NeurIPS",
-          "doi": null
-        },
-        {
-          "title": "Elastic aggregation for federated optimization",
-          "authors": [
-            "Dengsheng Chen",
-            "Jie Hu",
-            "Vince Junkai Tan",
-            "Xiaoming Wei"
-          ],
-          "year": 2023,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "Fed-erated graph semantic and structural learning",
-          "authors": [
-            "Huang"
-          ],
-          "year": 2023,
-          "venue": "IJCAI",
-          "doi": null
-        },
-        {
-          "title": "Fedcp: Separating fea-ture information for personalized federated learning via con-ditional policy",
-          "authors": [
-            "Zhang"
-          ],
-          "year": 2023,
-          "venue": "KDD",
-          "doi": null
-        },
-        {
-          "title": "Federated learning over images: Vertical decompositions and pre-trained backbones are difficult to beat",
-          "authors": [
-            "Erdong Hu",
-            "Yuxin Tang",
-            "Anastasios Kyrillidis"
-          ],
-          "year": 2023,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "Fedproc: Prototypical contrastive federated learning on non-iid data",
-          "authors": [
-            "Xutong Mu",
-            "Yulong Shen",
-            "Ke Cheng",
-            "Xueli Geng",
-            "Jiaxuan Fu",
-            "Tao Zhang"
-          ],
-          "year": 2023,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "Generaliz-able heterogeneous federated cross-correlation and instance similarity learning",
-          "authors": [
-            "Huang"
-          ],
-          "year": 2023,
-          "venue": "IEEE TPAMI",
-          "doi": null
-        },
-        {
-          "title": "Gradma: A gradient-memory-based accelerated federated learning with alleviated catastrophic forgetting",
-          "authors": [
-            "Kangyang Luo",
-            "Xiang Li",
-            "Yunshi Lan"
-          ],
-          "year": 2023,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "Heterogeneous federated learning: State-of-the-art and research challenges",
-          "authors": [
-            "Ye"
-          ],
-          "year": 2023,
-          "venue": "ACM CSUR",
-          "doi": null
-        },
-        {
-          "title": "No fear of classifier biases: Neural collapse inspired federated learning with synthetic and fixed classifier",
-          "authors": [
-            "Zexi Li",
-            "Xinyi Shang",
-            "Rui He",
-            "Tao Lin"
-          ],
-          "year": 2023,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "Personalized federated learning with feature alignment and classifier col-laboration",
-          "authors": [
-            "Xu"
-          ],
-          "year": 2023,
-          "venue": "ICLR",
-          "doi": null
-        },
-        {
-          "title": "Rethinking federated learning with domain shift: A prototype view",
-          "authors": [
-            "Wenke Huang",
-            "Mang Ye",
-            "Zekun Shi",
-            "He Li"
-          ],
-          "year": 2023,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "Robust heterogeneous federated learning under data corruption",
-          "authors": [
-            "Xiuwen Fang",
-            "Mang Ye"
-          ],
-          "year": 2023,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "Ruhui Ma, and Haibing Guan. Eliminating domain bias for federated learning in representation space",
-          "authors": [
-            "Zhang"
-          ],
-          "year": 2023,
-          "venue": "NeurIPS",
-          "doi": null
-        },
-        {
-          "title": "Workie-talkie: Accelerating federated learning by overlapping computing and communications via contrastive regularization",
-          "authors": [
-            "Rui Chen",
-            "Qiyu Wan",
-            "Pavana Prakash",
-            "Lan Zhang",
-            "Xu Yuan",
-            "Yanmin Gong",
-            "Xin Fu"
-          ],
-          "year": 2023,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "Fair federated learning under domain skew with local consistency and domain diversity",
-          "authors": [
-            "Yuhang Chen",
-            "Wenke Huang"
-          ],
-          "year": 2024,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "Revisiting federated learning with label skew: An over-confidence perspective",
-          "authors": [
-            "Ye"
-          ],
-          "year": 2024,
-          "venue": "SCIS",
-          "doi": null
-        },
-        {
-          "title": "10.1007/978-3-031-43895-0_65",
-          "authors": [],
           "year": null,
           "venue": null,
-          "doi": "10.1007/978-3-031-43895-0_65"
-        },
-        {
-          "title": "10.1007/978-3-319-44781-0_8",
-          "authors": [],
-          "year": null,
-          "venue": null,
-          "doi": "10.1007/978-3-319-44781-0_8"
-        },
-        {
-          "title": "10.1016/j.future.2023.01.019",
-          "authors": [],
-          "year": null,
-          "venue": null,
-          "doi": "10.1016/j.future.2023.01.019"
-        },
-        {
-          "title": "10.1016/j.jmp.2017.05.006",
-          "authors": [],
-          "year": null,
-          "venue": null,
-          "doi": "10.1016/j.jmp.2017.05.006"
-        },
-        {
-          "title": "10.1073/pnas.1611835114",
-          "authors": [],
-          "year": null,
-          "venue": null,
-          "doi": "10.1073/pnas.1611835114"
-        },
-        {
-          "title": "10.1109/CVPR46437.2021.01057",
-          "authors": [],
-          "year": null,
-          "venue": null,
-          "doi": "10.1109/CVPR46437.2021.01057"
-        },
-        {
-          "title": "10.1109/CVPR52688.2022.00821",
-          "authors": [],
-          "year": null,
-          "venue": null,
-          "doi": "10.1109/CVPR52688.2022.00821"
-        },
-        {
-          "title": "10.1109/CVPR52688.2022.00980",
-          "authors": [],
-          "year": null,
-          "venue": null,
-          "doi": "10.1109/CVPR52688.2022.00980"
-        },
-        {
-          "title": "10.1109/CVPR52688.2022.00983",
-          "authors": [],
-          "year": null,
-          "venue": null,
-          "doi": "10.1109/CVPR52688.2022.00983"
-        },
-        {
-          "title": "10.1109/CVPR52688.2022.00987",
-          "authors": [],
-          "year": null,
-          "venue": null,
-          "doi": "10.1109/CVPR52688.2022.00987"
-        },
-        {
-          "title": "10.1109/CVPR52688.2022.00990",
-          "authors": [],
-          "year": null,
-          "venue": null,
-          "doi": "10.1109/CVPR52688.2022.00990"
+          "doi": null
         }
       ],
-      "relationships": [],
-      "analysis_json_path": "src/data/analysis/fe0a331f6c634574ba46e7c669af2310-fedas.json",
+      "relationships": [
+        {
+          "source": "08c90e69c257474f8f9dc64339c570d5-fedntd",
+          "target": "87d436b64da24ff299d73231b6c3588b-fedgkd-toward-heterogeneous-federated-learning-",
+          "type": "same_category_evolution",
+          "reason": "同一类别中的时间演进关系。"
+        }
+      ],
+      "analysis_json_path": "src/data/analysis/08c90e69c257474f8f9dc64339c570d5-fedntd.json",
       "needs_human_review": false,
-      "created_at": "2026-06-21T07:56:10.276031Z",
-      "updated_at": "2026-06-21T07:56:10.276031Z",
+      "created_at": "2026-06-23T05:50:21.979424Z",
+      "updated_at": "2026-06-23T05:50:21.979424Z",
       "venue_source": "crossref_title",
-      "doi": "10.1109/cvpr52733.2024.01139",
-      "arxiv_id": "2111.04263",
-      "source_url": "https://doi.org/10.1109/cvpr52733.2024.01139",
-      "citation_text": "Xiyuan Yang, Wenke Huang, Mang Ye (2024). FedAS: Bridging Inconsistency in Personalized Federated Learning. 2024 IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR).",
-      "bibtex": "@article{xiyuanyang2024,\n  title = {FedAS: Bridging Inconsistency in Personalized Federated Learning},\n  author = {Xiyuan Yang and Wenke Huang and Mang Ye},\n  year = {2024},\n  journal = {2024 IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},\n  doi = {10.1109/cvpr52733.2024.01139}\n}",
+      "doi": "10.52202/068431-2787",
+      "arxiv_id": "2106.03097",
+      "source_url": "https://doi.org/10.52202/068431-2787",
+      "citation_text": "Gihun Lee, Minchan Jeong, Yongjin Shin, Sangmin Bae, Se-Young Yun. (2022). Preservation of the Global Knowledge by Not-True Distillation in Federated Learning. Advances in Neural Information Processing Systems 35.",
+      "bibtex": "@inproceedings{lee2022preservation,\n  title={Preservation of the Global Knowledge by Not-True Distillation in Federated Learning},\n  author={Gihun Lee and Minchan Jeong and Yongjin Shin and Sangmin Bae and Se-Young Yun},\n  booktitle={Advances in Neural Information Processing Systems 35},\n  year={2022},\n  doi={10.52202/068431-2787}\n}",
       "metadata_confidence": 0.95,
       "metadata_source_method": "crossref_title",
-      "metadata_verification_notes": "标题和作者与PDF提取完全一致；远程Crossref记录包含DOI和会议信息；摘要取自本地PDF；arxiv_id来自本地；高度可信。",
+      "metadata_verification_notes": "标题与摘要与PDF完全一致；Crossref候选提供正式发表会议NeurIPS 2022和DOI，作者列表与PDF及arXiv一致；arXiv预印本ID为2106.03097，正式出版年份2022。",
       "source_candidates": [
         {
           "provider": "local_pdf",
-          "title": "FedAS: Bridging Inconsistency in Personalized Federated Learning",
-          "authors": [],
-          "abstract": "Personalized Federated Learning (PFL) is primarily designed to provide customized models for each client to better fit the non-iid distributed client data, which is a inherent challenge in Federated Learning. However, current PFL methods suffer from inconsistencies in both intra-client and inter-client levels: 1) The intra-client inconsistency stems from the asynchronous update strategy for personalized and shared parameters. In PFL, clients update their shared parameters to communicate and learn from others, while keeping personalized parts unchanged, leading to poor coordination between these two components. 2) The Inter-client inconsistency arises from “stragglers” - inactive clients that communicate and train with the server less frequently. This results in their under-trained personalized models and impedes the collaborative training stage for other clients. In this paper, we present a novel PFL framework named FedAS, which uses Federated Parameter-Alignment and Client-Synchronization to overcome above challenges. Initially, we enhance the localization of global parameters by infusing them with local insights. We make the shared parts learn from previous model, thereby increasing their local relevance and reducing the impact of parameter inconsistency. Furthermore, we design a robust aggregation method to mitigate the impact of stragglers by preventing the incorporation of their under-trained knowledge into aggregated model. Experimental results on Cifar10 and Cifar100 validate the effectiveness of our FedAS in achieving better performance and robustness against data heterogeneity.",
-          "year": null,
-          "venue": null,
-          "doi": null,
-          "arxiv_id": null,
-          "source_url": null,
-          "citation_text": null,
-          "bibtex": null,
-          "confidence": 0.65,
-          "reason": "来自本地 PDF 首页与摘要区域提取。"
-        },
-        {
-          "provider": "crossref_title",
-          "title": "FedAS: Bridging Inconsistency in Personalized Federated Learning",
+          "title": "Preservation of the Global Knowledge by Not-True Distillation in Federated Learning",
           "authors": [
-            "Xiyuan Yang",
-            "Wenke Huang",
-            "Mang Ye"
+            "Gihun Lee",
+            "Minchan Jeong",
+            "Yongjin Shin",
+            "Sangmin Bae",
+            "Se-Young Yun KAIST"
           ],
-          "abstract": "",
-          "year": 2024,
-          "venue": "2024 IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)",
-          "doi": "10.1109/cvpr52733.2024.01139",
-          "arxiv_id": null,
-          "source_url": "https://doi.org/10.1109/cvpr52733.2024.01139",
-          "citation_text": "Xiyuan Yang, Wenke Huang, Mang Ye (2024). FedAS: Bridging Inconsistency in Personalized Federated Learning. 2024 IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR).",
-          "bibtex": "@article{xiyuanyang2024,\n  title = {FedAS: Bridging Inconsistency in Personalized Federated Learning},\n  author = {Xiyuan Yang and Wenke Huang and Mang Ye},\n  year = {2024},\n  journal = {2024 IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},\n  doi = {10.1109/cvpr52733.2024.01139}\n}",
-          "confidence": 0.61,
-          "reason": "标题相似度 1.00，包含 DOI，作者数 3，参考文献 58 条"
-        }
-      ]
-    },
-    {
-      "id": "747907c35214414c8494868704be8795-scaffold",
-      "short": "FEDAVG",
-      "title": "SCAFFOLD: Stochastic Controlled Averaging for Federated Learning",
-      "year": null,
-      "authors": [],
-      "first_author": "",
-      "venue": null,
-      "abstract": "Federated Averaging (FEDAVG) has emerged as the algorithm of choice for federated learning due to its simplicity and low communication cost. However, in spite of recent research efforts, its performance is not fully understood. We obtain tight convergence rates for FEDAVG and prove that it suffers from ‘client-drift’ when the data is heterogeneous (non-iid), resulting in unstable and slow convergence.",
-      "summary": "本文针对联邦学习中的非独立同分布（non-iid）数据带来的客户端漂移（client-drift）问题，提出SCAFFOLD算法。通过引入控制变量（方差缩减）来修正本地更新方向，消除数据异构导致的漂移。理论证明SCAFFOLD不受客户端采样和数据异构影响，收敛速度至少与SGD一样快，且当客户端数据相似时可进一步加速。实验在扩展MNIST上验证了理论结果。",
-      "idea": "SCAFFOLD通过维护服务器和客户端控制变量（方差缩减），在本地更新中减去客户端漂移的估计（c - c_i），以纠正异构数据引起的更新偏移。",
-      "categories": [
-        "optimization"
-      ],
-      "source_path": "D:\\48174\\projects\\Knowledge-Map\\paper\\01_基础联邦优化\\747907c35214414c8494868704be8795-scaffold.pdf",
-      "innovation": "首次系统分析了FedAvg在异构数据下因客户端漂移导致的慢收敛，并提出了SCAFFOLD算法，利用控制变量消除漂移，实现与SGD相当的收敛速度，且能利用客户端相似性进一步减少通信轮次。",
-      "innovation_points": [
-        {
-          "point": "推导了FedAvg在客户端采样和异构数据下更紧的收敛率，并证明异构数据导致客户端漂移，即使全批次梯度所有客户端参与也会造成慢收敛。",
-          "evidence": "Abstract: 'We obtain tight convergence rates for FEDAVG and prove that it suffers from ‘client-drift’ when the data is heterogeneous (non-iid), resulting in unstable and slow convergence.' 及Section 3的定理和讨论。",
-          "confidence": 0.9
-        },
-        {
-          "point": "提出SCAFFOLD算法，使用控制变量（方差缩减）来纠正客户端漂移。",
-          "evidence": "Abstract: 'As a solution, we propose a new algorithm (SCAFFOLD) which uses control variates (variance reduction) to correct for the ‘client-drift’ in its local updates.'",
-          "confidence": 0.9
-        },
-        {
-          "point": "证明SCAFFOLD至少与SGD一样快，且收敛速度不受数据异构程度影响。",
-          "evidence": "Abstract: 'We prove that SCAFFOLD requires significantly fewer communication rounds and is not affected by data heterogeneity or client sampling.' 及Section 4的定理3. 'SCAFFOLD is at least as fast as SGD and converges for arbitrarily heterogeneous data.'",
-          "confidence": 0.9
-        },
-        {
-          "point": "证明SCAFFOLD能利用客户端数据相似性（小的Hessian差异）进一步减少所需通信。",
-          "evidence": "Abstract: 'Further, we show that (for quadratics) SCAFFOLD can take advantage of similarity in the client’s data yielding even faster convergence.' 及Section 4的相关定理和讨论。",
-          "confidence": 0.6
-        },
-        {
-          "point": "证明SCAFFOLD对客户端采样具有方差缩减特性，受子采样影响小。",
-          "evidence": "Contributions: 'We prove that SCAFFOLD is relatively unaffected by the client sampling obtaining variance reduced rates, making it especially suitable for federated learning.'",
-          "confidence": 0.9
-        }
-      ],
-      "flow_steps": [
-        "服务器初始化全局模型x0和控制变量c0，所有客户端控制变量ci0初始化为0或与c0相同。",
-        "每个通信轮次r：服务器采样一组客户端S，并将当前模型x^r和服务器控制变量c^r发送给这些客户端。",
-        "每个客户端i在本地复制模型y_i = x^r，并执行K步本地更新：y_i ← y_i - η_l (g_i(y_i) - c_i^r + c^r)，其中g_i为随机梯度，(c^r - c_i^r)为客户端漂移修正项。",
-        "客户端完成K步后，计算本地控制变量更新：c_i^{r+1} = c_i^r - c^r + (x^r - y_i)/(K η_l)，并可选地使用额外梯度样本来重置控制变量。",
-        "服务器聚合客户端模型更新得到新模型：x^{r+1} = x^r + (η_g / |S|) Σ_{i∈S} (y_i - x^r)。",
-        "服务器更新控制变量：c^{r+1} = c^r + (1/N) Σ_{i∈S} (c_i^{r+1} - c_i^r) 或直接使用采样的客户端控制变量平均。",
-        "重复以上步骤直至收敛。"
-      ],
-      "applications": "联邦学习场景，如移动设备上的键盘预测、医院间的医疗数据协作、传感器网络等，尤其是客户端数据分布高度异构且通信受限的情况。",
-      "limitations": "The paper does not explicitly state limitations, but some can be inferred from the methodology and theoretical assumptions.",
-      "limitation_points": [
-        {
-          "point": "SCAFFOLD requires maintaining and communicating control variates (c and c_i) for variance reduction, which increases per-round communication overhead compared to methods that only transmit model updates.",
-          "evidence": "The algorithm uses control variates (Section 1: 'SCAFFOLD uses control variates... to correct for the client-drift') and Table 1 defines server and client control variates, implying additional state to be stored and synchronized.",
-          "type": "inferred",
-          "severity": "medium"
-        },
-        {
-          "point": "The theoretical convergence guarantees rely on standard assumptions such as smoothness and bounded gradient variance, which may not hold in practical federated learning scenarios with non-smooth losses or heavy-tailed noise.",
-          "evidence": "Section 2 states: 'We assume that f is bounded from below by f* and f_i is β-smooth. Further, we assume g_i(x) is an unbiased stochastic gradient with variance bounded by σ^2.'",
-          "type": "inferred",
-          "severity": "low"
-        },
-        {
-          "point": "The property that SCAFFOLD can leverage client similarity to accelerate convergence is only proven for quadratic functions, potentially limiting its generality to other loss functions.",
-          "evidence": "Abstract mentions: 'for quadratics, SCAFFOLD can take advantage of similarity in the client’s data yielding even faster convergence,' suggesting the result may not extend to non-quadratic settings.",
-          "type": "inferred",
-          "severity": "low"
-        }
-      ],
-      "citations": [
-        {
-          "title": "T., Yu, F",
-          "authors": [
-            "Agarwal N",
-            "Suresh A. T",
-            "Yu F. X",
-            "Kumar S"
-          ],
-          "year": 2018,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "Arjevani, Y",
-          "authors": [],
-          "year": 2015,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "Private empirical risk minimization: Efficient algorithms and tight error bounds",
-          "authors": [
-            "Bassily R",
-            "Smith A"
-          ],
-          "year": 2014,
-          "venue": "2014 IEEE 55th Annual Symposium on Foundations of Computer Science",
-          "doi": null
-        },
-        {
-          "title": "Qsparse-local-SGD: Distributed SGD with quantization, sparsification, and local computations",
-          "authors": [
-            "Basu D",
-            "Data D",
-            "Karakus C"
-          ],
-          "year": 2019,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "the 2017 ACM SIGSAC Conference on Computer and Communications Security, pp",
-          "authors": [
-            "Bonawitz K",
-            "Ivanov V",
-            "Kreuter B",
-            "Marcedone A",
-            "McMahan H. B",
-            "Patel S",
-            "Ramage D",
-            "Segal A"
-          ],
-          "year": 2017,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "S., Chen, R., Mela, T., Olshevsky, A., Paschalidis, I",
-          "authors": [
-            "Brisimi T. S",
-            "Chen R",
-            "Mela T",
-            "Olshevsky A",
-            "Paschalidis I. C"
-          ],
-          "year": 2018,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "Convergence of distributed stochastic variance reduced methods without sampling extra data",
-          "authors": [
-            "Cen S",
-            "Zhang H",
-            "Chi Y",
-            "Chen W"
-          ],
-          "year": 2019,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "Differentially private empirical risk minimization",
-          "authors": [
-            "Chaudhuri K",
-            "Monteleoni C"
-          ],
-          "year": 2011,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "Federated learning of out-of-vocabulary words",
-          "authors": [
-            "Chen M",
-            "Mathews R",
-            "Ouyang T"
-          ],
-          "year": null,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "T., Mathews, R., Wong, A., Beaufays, F., Allauzen, C., and Riley, M",
-          "authors": [
-            "Chen M",
-            "Suresh A. T",
-            "Mathews R",
-            "Wong A",
-            "Beaufays F",
-            "Allauzen C"
-          ],
-          "year": null,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "Emnist: Extending mnist to handwritten letters",
-          "authors": [
-            "Cohen G",
-            "Afshar S",
-            "Tapson J"
-          ],
-          "year": 2017,
-          "venue": "2017 International Joint Conference on Neural Networks (IJCNN)",
-          "doi": null
-        },
-        {
-          "title": "V., and Ng, A",
-          "authors": [
-            "Dean J",
-            "Corrado G",
-            "Monga R",
-            "Chen K",
-            "Devin M",
-            "Mao M",
-            "Ranzato M",
-            "Senior A",
-            "Tucker P",
-            "Yang K",
-            "Le Q. V"
-          ],
-          "year": 2012,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "Defazio, A",
-          "authors": [],
-          "year": 2019,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "SAGA: A fast incremental gradient method with support for non-strongly convex composite objectives",
-          "authors": [
-            "Defazio A",
-            "Bach F"
-          ],
-          "year": 2014,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "J., Lin, Z., and Zhang, T",
-          "authors": [
-            "Fang C",
-            "Li C. J",
-            "Lin Z"
-          ],
-          "year": 2018,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "Glasserman, P",
-          "authors": [],
-          "year": 2013,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "Accurate, large minibatch SGD: Training imagenet in 1 hour",
-          "authors": [
-            "Goyal P",
-            "Girshick R",
-            "Noordhuis P",
-            "Wesolowski L",
-            "Kyrola A",
-            "Tulloch A",
-            "Jia Y"
-          ],
-          "year": 2017,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "Haddadpour, F",
-          "authors": [],
-          "year": 2019,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "Hanzely, F",
-          "authors": [],
-          "year": 2019,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "Federated learning for mobile keyboard prediction",
-          "authors": [
-            "Hard A",
-            "Rao K",
-            "Mathews R",
-            "Beaufays F",
-            "Augenstein S",
-            "Eichner H",
-            "Kiddon C"
-          ],
-          "year": 2018,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "H., Qi, H., and Brown, M",
-          "authors": [
-            "T.-M. H"
-          ],
-          "year": 2019,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "N., Moskewicz, M",
-          "authors": [
-            "Iandola F. N",
-            "Moskewicz M. W",
-            "Ashraf K"
-          ],
-          "year": 2016,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "Johnson, R",
-          "authors": [],
-          "year": 2013,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "B., Avent, B., Bellet, A., Bennis, M., Bhagoji, A",
-          "authors": [
-            "Kairouz P",
-            "McMahan H. B",
-            "Avent B",
-            "Bellet A",
-            "Bennis M",
-            "Bhagoji A. N",
-            "Bonawitz K",
-            "Charles Z",
-            "Cormode G",
-            "Cummings R"
-          ],
-          "year": 2019,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "Linear convergence of gradient and proximal-gradient methods under the polyak-lojasiewicz condition",
-          "authors": [
-            "Knowledge Discovery in Databases",
-            "pp. 795–811. Springer"
-          ],
-          "year": 2016,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "P., Rebjock, Q., Stich, S",
-          "authors": [
-            "Karimireddy S. P",
-            "Rebjock Q",
-            "Stich S. U"
-          ],
-          "year": 2019,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "Tighter theory for local SGD on identical and heterogeneous data",
-          "authors": [
-            "Khaled A",
-            "Mishchenko K"
-          ],
-          "year": 2020,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "Private convex empirical risk minimization and high-dimensional regression",
-          "authors": [
-            "Kifer D",
-            "Smith A"
-          ],
-          "year": 2012,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "B., Ramage, D., and Richtárik, P",
-          "authors": [
-            "H. B"
-          ],
-          "year": null,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "B., Yu, F",
-          "authors": [
-            "H. B",
-            "F. X",
-            "A. T"
-          ],
-          "year": null,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "Kulunchakov, A",
-          "authors": [],
-          "year": 2019,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "D., Lin, Q., Ma, T., and Yang, T",
-          "authors": [
-            "Lee J. D",
-            "Lin Q",
-            "Ma T"
-          ],
-          "year": 2015,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "Lei, L",
-          "authors": [],
-          "year": 2017,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "K., Sanjabi, M., Zaheer, M., Talwalkar, A., and Smith, V",
-          "authors": [
-            "Li T",
-            "Sahu A. K",
-            "Sanjabi M",
-            "Zaheer M",
-            "Talwalkar A"
-          ],
-          "year": 2018,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "Fair resource allocation in federated learning",
-          "authors": [
-            "Li T",
-            "Sanjabi M"
-          ],
-          "year": null,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "K., Zaheer, M., Sanjabi, M., Talwalkar, A., and Smith, V",
-          "authors": [
-            "Li T",
-            "Sahu A. K",
-            "Zaheer M",
-            "Sanjabi M",
-            "Talwalkar A"
-          ],
-          "year": 2020,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "On the convergence of FedAvg on non-iid data",
-          "authors": [
-            "Li X",
-            "Huang K",
-            "Yang W",
-            "Wang S"
-          ],
-          "year": null,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "Variance reduced local sgd with lower communication complexity",
-          "authors": [
-            "Liang X",
-            "Shen S",
-            "Liu J",
-            "Pan Z",
-            "Chen E"
-          ],
-          "year": 2019,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "Communication-efficient learning of deep networks from decentralized data",
-          "authors": [
-            "McMahan B",
-            "Moore E",
-            "Ramage D",
-            "Hampson S"
-          ],
-          "year": 2017,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "Distributed learning with compressed gradient differences",
-          "authors": [
-            "Mishchenko K",
-            "Gorbunov E"
-          ],
-          "year": 2019,
-          "venue": null,
-          "doi": null
-        }
-      ],
-      "relationships": [],
-      "analysis_json_path": "src/data/analysis/747907c35214414c8494868704be8795-scaffold.json",
-      "needs_human_review": false,
-      "created_at": "2026-06-18T12:14:00.060167Z",
-      "updated_at": "2026-06-18T12:14:00.060167Z",
-      "venue_source": null,
-      "doi": null,
-      "arxiv_id": null,
-      "source_url": null,
-      "citation_text": null,
-      "bibtex": null,
-      "metadata_confidence": 0.65,
-      "metadata_source_method": "local_pdf",
-      "metadata_verification_notes": "从 PDF 首页文本启发式提取，并对标题、作者、引用做了规则清洗。",
-      "source_candidates": [
-        {
-          "provider": "local_pdf",
-          "title": "SCAFFOLD: Stochastic Controlled Averaging for Federated Learning",
-          "authors": [],
-          "abstract": "Federated Averaging (FEDAVG) has emerged as the algorithm of choice for federated learning due to its simplicity and low communication cost. However, in spite of recent research efforts, its performance is not fully understood. We obtain tight convergence rates for FEDAVG and prove that it suffers from ‘client-drift’ when the data is heterogeneous (non-iid), resulting in unstable and slow convergence.",
-          "year": 2012,
-          "venue": null,
-          "doi": null,
-          "arxiv_id": null,
-          "source_url": null,
-          "citation_text": null,
-          "bibtex": null,
-          "confidence": 0.65,
-          "reason": "来自本地 PDF 首页与摘要区域提取。"
-        }
-      ]
-    },
-    {
-      "id": "d1058bfb40294ab09097fce712077410-fd",
-      "short": "IID",
-      "title": "Communication-Efficient On-Device Machine Learning: Federated Distillation and Augmentation under Non-IID Private Data",
-      "year": null,
-      "authors": [
-        "Eunjeong Jeong",
-        "Seungeun Oh",
-        "Hyesung Kim",
-        "Seong-Lyun Kim"
-      ],
-      "first_author": "Eunjeong Jeong",
-      "venue": null,
-      "abstract": "On-device machine learning (ML) enables the training process to exploit a massive amount of user-generated private data samples. To enjoy this benefit, inter-device communication overhead should be minimized. With this end, we propose federated distillation (FD), a distributed model training algorithm whose communication payload size is much smaller than a benchmark scheme, federated learning (FL), particularly when the model size is large. Moreover, user-generated data samples are likely to become non-IID across devices, which commonly degrades the performance compared to the case with an IID dataset. To cope with this, we propose federated augmentation (FAug), where each device collectively trains a generative model, and thereby augments its local data towards yielding an IID dataset. Empirical studies demonstrate that FD with FAug yields around 26x less communication overhead while achieving 95-98% test accuracy compared to FL.",
-      "summary": "针对设备端联邦学习在非IID私有数据下通信开销大与准确率下降的问题，本文提出联邦蒸馏（FD）与联邦增强（FAug）。FD通过交换每标签的平均logit向量而非模型参数，使通信负荷仅取决于输出维度，大幅降低通信量；FAug利用服务器侧集体训练的生成模型（GAN）为每个设备补全缺失的数据样本，将非IID数据纠正为IID分布，并给出隐私-通信权衡策略。实验表明，在非IID MNIST数据集上，FD结合FAug相比传统联邦学习（FL）可减少约26倍通信开销，同时达到95–98%的测试准确率。",
-      "idea": "通过联邦蒸馏，各设备仅上传按标签平均的模型输出logit，而非模型参数，服务器聚合得到全局平均logit作为蒸馏教师信号；配合联邦增强，各设备上传少量样本到服务器训练GAN，然后下载生成器补全本地缺失标签，以矫正非IID数据分布。",
-      "categories": [
-        "distillation"
-      ],
-      "source_path": "D:\\48174\\projects\\Knowledge-Map\\paper\\03_知识蒸馏与异构联邦\\d1058bfb40294ab09097fce712077410-fd.pdf",
-      "innovation": "1) 提出联邦蒸馏（FD），将知识蒸馏推广到联邦场景，通信负载与模型大小解耦，仅与输出类别数相关；2) 提出联邦增强（FAug），利用GAN在服务器端集体生成缺失数据，避免直接交换原始数据，同时通过冗余标签上传控制隐私泄露；3) 定量定义了设备-服务器隐私泄漏与设备间隐私泄漏，给出权衡方案。",
-      "innovation_points": [
-        {
-          "point": "首次将在线知识蒸馏应用于联邦学习环境，通过交换每类平均logit而非模型参数，通信开销不随模型增大而上升。",
-          "evidence": "the proposed FD exchanges not the model parameters but the model output, allowing on-device ML to adopt large-sized local models. [...] each device in FD stores per-label mean logit vectors, and periodically uploads these local-average logit vectors to a server.",
-          "confidence": 0.9
-        },
-        {
-          "point": "提出联邦增强（FAug），在服务器上利用GAN集体训练生成模型，各设备下载生成器补全缺失标签，将非IID本地数据转换为IID，且通过上传冗余标签来保护目标标签隐私。",
-          "evidence": "we propose FAug where each device can locally generate the missing data samples using a generative model. [...] Each device ... uploads few seed data samples of these target labels to the server ... The server oversamples the uploaded seed data samples ... so as to train a conditional GAN. ... downloading the trained GAN's generator empowers each device to replenish the target labels until reaching an IID training dataset.",
-          "confidence": 0.9
-        },
-        {
-          "point": "形式化定义了设备-服务器隐私泄漏与设备间隐私泄漏，并提出冗余标签策略在两者之间取得平衡。",
-          "evidence": "To keep these target labels private from the server, the device additionally uploads redundant data samples from the labels other than the target labels. The privacy leakage from each device to the server, denoted as device-server privacy leakage (PL), is thereby reduced at the cost of extra uplink communication overhead. [...] The target label information of a device can also be leaked to the other devices ... This privacy leakage is quantified by inter-device PL.",
-          "confidence": 0.9
-        }
-      ],
-      "flow_steps": [
-        "FD流程: 1) 每个设备本地训练时，为每个标签累积模型输出logit，定期计算每个标签的本地平均logit并上传至服务器；2) 服务器收集所有设备的本地平均logit，计算每个标签的全局平均（排除当前设备自身），下发至各设备；3) 设备在下一步训练中，将对应标签的全局平均logit作为蒸馏教师信号，与交叉熵损失共同构成训练目标。",
-        "FAug流程: 1) 每个设备识别本地缺少的数据标签（目标标签），选取少量目标标签种子样本和若干冗余标签样本，上传至服务器；2) 服务器对接收到的样本进行过采样（例如利用Google图像搜索）以扩充训练集，并用其训练条件GAN；3) 服务器将训练好的生成器分发至所有设备；4) 设备利用生成器生成目标标签的合成样本，直至本地数据集成为IID分布，之后进行本地或联邦学习。"
-      ],
-      "applications": "通信资源受限的移动设备端联邦学习；敏感数据（如医疗、金融）的隐私保护协作训练；分布式传感器网络中的模型训练；个人终端数据不平衡时的模型构建",
-      "limitations": "The proposed FD and FAug are validated only on MNIST, leaving generalizability unknown. Communication efficiency of FD relies on a small number of labels, and may degrade for many-class problems. FAug incurs residual privacy leakage between devices unless device count is large, and uploading seed samples still poses device-server privacy risks.",
-      "limitation_points": [
-        {
-          "point": "The inter-device privacy leakage of FAug is minimized only when the number of devices is sufficiently large; in small-scale systems it remains non-negligible.",
-          "evidence": "From Section 3: 'This minimum leakage can be achieved so long as the number of devices is sufficiently large, regardless of the sizes of the target and redundant labels.'",
-          "type": "paper_claimed",
-          "severity": "medium"
-        },
-        {
-          "point": "Experiments are limited to MNIST, making the effectiveness on more complex datasets or larger models uncertain.",
-          "evidence": "Section 4 starts with: 'In this section, we evaluate the proposed FD and FAug under a non-IID MNIST training dataset that is constructed by the following procedure.'",
-          "type": "inferred",
-          "severity": "medium"
-        },
-        {
-          "point": "FD's communication overhead scales with the number of labels, which could become problematic for tasks with many classes.",
-          "evidence": "Abstract states communication payload is 'much smaller than a benchmark scheme, federated learning (FL), particularly when the model size is large,' implying dependence on output dimension (labels) rather than model size.",
-          "type": "inferred",
-          "severity": "medium"
-        }
-      ],
-      "citations": [
-        {
-          "title": "On-Device Machine Intelligence",
-          "authors": [],
-          "year": 2017,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "Bennis",
-          "authors": [],
-          "year": 2018,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "Konečný, H",
-          "authors": [
-            "J. Konečný",
-            "H. B. McMagan"
-          ],
-          "year": null,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "McMahan, E",
-          "authors": [
-            "H. B. McMahan",
-            "E. Moore",
-            "D. Ramage",
-            "S. Hampson",
-            "Fort Lauderdale"
-          ],
-          "year": 2017,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "Kim, J",
-          "authors": [
-            "H. Kim",
-            "J. Park",
-            "M. Bennis"
-          ],
-          "year": null,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "Samarakoon, M",
-          "authors": [
-            "S. Samarakoon",
-            "M. Bennis",
-            "W. Saad"
-          ],
-          "year": null,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "Nishio and R",
-          "authors": [
-            "T. Nishio"
-          ],
-          "year": null,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "A, Dec",
-          "authors": [
-            "R. C. Geyer",
-            "T. Klein",
-            "other Consumer Devices Workshop",
-            "Long Beach"
-          ],
-          "year": 2017,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "Zhao, M",
-          "authors": [
-            "Y. Zhao",
-            "M. Li",
-            "L. Lai",
-            "N. Suda",
-            "D. Civin"
-          ],
-          "year": null,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "Hinton, O",
-          "authors": [
-            "G. E. Hinton",
-            "O. Vinyals"
-          ],
-          "year": 2014,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "Anil, G",
-          "authors": [
-            "R. Anil",
-            "G. Pereyra",
-            "A. Passos",
-            "R. Ormandi",
-            "G. E. Dahl"
-          ],
-          "year": null,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "Mirza, and S",
-          "authors": [
-            "M. Mirza"
-          ],
-          "year": null,
-          "venue": null,
-          "doi": null
-        },
-        {
-          "title": "Park, S.-L",
-          "authors": [
-            "J. Park",
-            "S.-L. Kim"
-          ],
-          "year": 2016,
-          "venue": null,
-          "doi": null
-        }
-      ],
-      "relationships": [],
-      "analysis_json_path": "src/data/analysis/d1058bfb40294ab09097fce712077410-fd.json",
-      "needs_human_review": false,
-      "created_at": "2026-06-19T03:13:56.139464Z",
-      "updated_at": "2026-06-19T03:13:56.139464Z",
-      "venue_source": "local_pdf",
-      "doi": null,
-      "arxiv_id": null,
-      "source_url": null,
-      "citation_text": "Eunjeong Jeong, Seungeun Oh, Hyesung Kim, Seong-Lyun Kim (n.d.). Communication-Efficient On-Device Machine Learning: Federated Distillation and Augmentation under Non-IID Private Data.",
-      "bibtex": "@article{eunjeongjeonnd,\n  title = {Communication-Efficient On-Device Machine Learning: Federated Distillation and Augmentation under Non-IID Private Data},\n  author = {Eunjeong Jeong and Seungeun Oh and Hyesung Kim and Seong-Lyun Kim}\n}",
-      "metadata_confidence": 0.8,
-      "metadata_source_method": "local_pdf",
-      "metadata_verification_notes": "联网候选标题与本地PDF标题不一致，作者不同，属于不同论文；本地PDF摘录内容与本地提取完全一致，因此回退到本地提取结果。",
-      "source_candidates": [
-        {
-          "provider": "local_pdf",
-          "title": "Communication-Efficient On-Device Machine Learning: Federated Distillation and Augmentation under Non-IID Private Data",
-          "authors": [
-            "Eunjeong Jeong",
-            "Seungeun Oh",
-            "Hyesung Kim",
-            "Seong-Lyun Kim"
-          ],
-          "abstract": "On-device machine learning (ML) enables the training process to exploit a massive amount of user-generated private data samples. To enjoy this benefit, inter-device communication overhead should be minimized. With this end, we propose federated distillation (FD), a distributed model training algorithm whose communication payload size is much smaller than a benchmark scheme, federated learning (FL), particularly when the model size is large. Moreover, user-generated data samples are likely to become non-IID across devices, which commonly degrades the performance compared to the case with an IID dataset. To cope with this, we propose federated augmentation (FAug), where each device collectively trains a generative model, and thereby augments its local data towards yielding an IID dataset. Empirical studies demonstrate that FD with FAug yields around 26x less communication overhead while achieving 95-98% test accuracy compared to FL.",
+          "abstract": "In federated learning, a strong global model is collaboratively learned by aggregating clients’ locally trained models. Although this precludes the need to access clients’ data directly, the global model’s convergence often suffers from data heterogeneity. This study starts from an analogy to continual learning and suggests that forgetting could be the bottleneck of federated learning. We observe that the global model forgets the knowledge from previous rounds, and the local training induces forgetting the knowledge outside of the local distribution. Based on our findings, we hypothesize that tackling down forgetting will relieve the data heterogeneity problem. To this end, we propose a novel and effective algorithm, Federated Not-True Distillation (FedNTD), which preserves the global perspective on locally available data only for the not-true classes. In the experiments, FedNTD shows state-of-the-art performance on various setups without compromising data privacy or incurring additional communication costs<sup>1</sup>.",
           "year": null,
           "venue": null,
           "doi": null,
@@ -2706,25 +1152,656 @@
           "reason": "来自本地 PDF 首页与摘要区域提取。"
         },
         {
-          "provider": "crossref_title",
-          "title": "FedVAE: Communication-Efficient Federated Learning With Non-IID Private Data",
+          "provider": "arxiv_id",
+          "title": "Preservation of the Global Knowledge by Not-True Distillation in Federated Learning",
           "authors": [
-            "Haomiao Yang",
-            "Mengyu Ge",
-            "Kunlan Xiang",
-            "Xuejun Bai",
-            "Hongwei Li"
+            "Gihun Lee",
+            "Minchan Jeong",
+            "Yongjin Shin",
+            "Sangmin Bae",
+            "Se-Young Yun"
+          ],
+          "abstract": "In federated learning, a strong global model is collaboratively learned by aggregating clients' locally trained models. Although this precludes the need to access clients' data directly, the global model's convergence often suffers from data heterogeneity. This study starts from an analogy to continual learning and suggests that forgetting could be the bottleneck of federated learning. We observe that the global model forgets the knowledge from previous rounds, and the local training induces forgetting the knowledge outside of the local distribution. Based on our findings, we hypothesize that tackling down forgetting will relieve the data heterogeneity problem. To this end, we propose a novel and effective algorithm, Federated Not-True Distillation (FedNTD), which preserves the global perspective on locally available data only for the not-true classes. In the experiments, FedNTD shows state-of-the-art performance on various setups without compromising data privacy or incurring additional communication costs.",
+          "year": 2021,
+          "venue": "arXiv",
+          "doi": null,
+          "arxiv_id": "2106.03097v5",
+          "source_url": "https://arxiv.org/abs/2106.03097v5",
+          "citation_text": "Gihun Lee, Minchan Jeong, Yongjin Shin, Sangmin Bae (2021). Preservation of the Global Knowledge by Not-True Distillation in Federated Learning. arXiv.",
+          "bibtex": "@article{gihunlee2021,\n  title = {Preservation of the Global Knowledge by Not-True Distillation in Federated Learning},\n  author = {Gihun Lee and Minchan Jeong and Yongjin Shin and Sangmin Bae and Se-Young Yun},\n  year = {2021},\n  journal = {arXiv},\n  eprint = {2106.03097v5}\n}",
+          "confidence": 0.99,
+          "reason": "标题相似度 1.00，包含 arXiv ID，作者数 5"
+        },
+        {
+          "provider": "crossref_title",
+          "title": "Preservation of the Global Knowledge by Not-True Distillation in Federated Learning",
+          "authors": [
+            "Gihun Lee",
+            "Minchan Jeong",
+            "Yongjin Shin",
+            "Sangmin Bae",
+            "Se-Young Yun"
           ],
           "abstract": "",
-          "year": 2023,
-          "venue": "IEEE Systems Journal",
-          "doi": "10.1109/jsyst.2023.3274197",
+          "year": 2022,
+          "venue": "Advances in Neural Information Processing Systems 35",
+          "doi": "10.52202/068431-2787",
           "arxiv_id": null,
-          "source_url": "https://doi.org/10.1109/jsyst.2023.3274197",
-          "citation_text": "Haomiao Yang, Mengyu Ge, Kunlan Xiang, Xuejun Bai (2023). FedVAE: Communication-Efficient Federated Learning With Non-IID Private Data. IEEE Systems Journal.",
-          "bibtex": "@article{haomiaoyang2023,\n  title = {FedVAE: Communication-Efficient Federated Learning With Non-IID Private Data},\n  author = {Haomiao Yang and Mengyu Ge and Kunlan Xiang and Xuejun Bai and Hongwei Li},\n  year = {2023},\n  journal = {IEEE Systems Journal},\n  doi = {10.1109/jsyst.2023.3274197}\n}",
-          "confidence": 0.3444,
-          "reason": "标题相似度 0.59，包含 DOI，作者数 5"
+          "source_url": "https://doi.org/10.52202/068431-2787",
+          "citation_text": "Gihun Lee, Minchan Jeong, Yongjin Shin, Sangmin Bae (2022). Preservation of the Global Knowledge by Not-True Distillation in Federated Learning. Advances in Neural Information Processing Systems 35.",
+          "bibtex": "@article{gihunlee2022,\n  title = {Preservation of the Global Knowledge by Not-True Distillation in Federated Learning},\n  author = {Gihun Lee and Minchan Jeong and Yongjin Shin and Sangmin Bae and Se-Young Yun},\n  year = {2022},\n  journal = {Advances in Neural Information Processing Systems 35},\n  doi = {10.52202/068431-2787}\n}",
+          "confidence": 0.69,
+          "reason": "标题相似度 1.00，包含 DOI，作者数 5"
+        }
+      ]
+    },
+    {
+      "id": "87d436b64da24ff299d73231b6c3588b-fedgkd-toward-heterogeneous-federated-learning-",
+      "short": "Yao",
+      "title": "FEDGKD: Toward Heterogeneous Federated Learning via Global Knowledge Distillation",
+      "year": 2024,
+      "authors": [
+        "Dezhong Yao",
+        "Wanning Pan",
+        "Yutong Dai",
+        "Yao Wan",
+        "Xiaofeng Ding",
+        "Chen Yu",
+        "Hai Jin",
+        "Zheng Xu",
+        "Lichao Sun"
+      ],
+      "first_author": "Dezhong Yao",
+      "venue": "IEEE transactions on computers",
+      "abstract": "Federated learning, as one enabling technology of edge intelligence, has gained substantial attention due to its efficacy in training deep learning models without data privacy and network bandwidth concerns. However, due to the heterogeneity of the edge computing system and data, many methods suffer from the “client-drift” issue that could considerably impede the convergence of global model training: local models on clients can drift apart, and the aggregated model can be different from the global optimum. To tackle this issue, one intuitive idea is to guide the local model training by global teachers, i.e., past global models, where each client learns the global knowledge from past global models via adaptive knowledge distillation techniques. Inspired by these insights, we propose a novel approach for heterogeneous federated learning, FedGKD, which fuses the knowledge from historical global models and guides local training to alleviate the “client-drift” issue. In this paper, we evaluate FedGKD through extensive experiments across various CV and NLP datasets (i.e., CIFAR-10/100, Tiny-ImageNet, AG News, SST5) under different heterogeneous settings. The proposed method is guaranteed to converge under common assumptions and outperforms the state-of-the-art baselines in the non-IID federated setting.",
+      "summary": "针对异构联邦学习中的客户端漂移问题，提出FEDGKD框架。该方法利用历史全局模型的集成知识，通过知识蒸馏引导本地训练，在不引入额外隐私风险、不修改模型结构的前提下，缓解非独立同分布数据导致的模型偏移。在CV和NLP任务上验证了有效性，优于现有基线。",
+      "idea": "通过集成历史全局模型参数或预测作为教师，引导本地模型在特征空间上蒸馏全局知识，以正则化本地更新并缓解客户端漂移。",
+      "categories": [
+        "distillation"
+      ],
+      "source_path": "D:\\48174\\projects\\Knowledge-Map-App\\src\\data\\paper\\03_知识蒸馏与异构联邦\\87d436b64da24ff299d73231b6c3588b-fedgkd-toward-heterogeneous-federated-learning-.pdf",
+      "innovation": "提出一种无需代理数据、不修改模型结构、无额外隐私泄露的全局知识蒸馏联邦学习机制，利用历史全局模型的集成提供教师信号，适用于异构模型场景。",
+      "innovation_points": [
+        {
+          "point": "利用历史全局模型集成作为教师进行知识蒸馏，引导本地训练。",
+          "evidence": "摘要“fuses the knowledge from historical global models and guides local training”；正文“FEDGKD ensembles the historical global models in the server buffer by averaging the model parameters... serves as a guide (teacher) for local training on knowledge distillation.”",
+          "confidence": 0.9
+        },
+        {
+          "point": "无需代理数据、不修改模型结构、无额外隐私信息共享。",
+          "evidence": "Table I对比中三项均为✗，贡献中强调“without introducing any privacy risks or model structure modification requirements”。",
+          "confidence": 0.9
+        },
+        {
+          "point": "兼容异构模型框架，基于特征空间正则化而非参数空间约束。",
+          "evidence": "引言“FEDGKD is compatible with the existing heterogeneous model framework”，方法部分解释为何参数空间方法失效。",
+          "confidence": 0.9
+        },
+        {
+          "point": "提出两种变体：FEDGKD（服务器端参数平均集成）和FEDGKD-VOTE（客户端集成预测）。",
+          "evidence": "正文“We also develop FEDGKD-VOTE, by broadcasting the historical global models... to ensemble their predictions on the client side.”",
+          "confidence": 0.9
+        }
+      ],
+      "flow_steps": [
+        "服务器端维护历史全局模型缓冲区（滑动窗口）。",
+        "每轮通信：服务器选取近期全局模型，通过参数平均（FEDGKD）或直接分发（FEDGKD-VOTE）生成教师模型并广播给参与客户端。",
+        "客户端接收教师模型，结合本地数据计算知识蒸馏损失（如KL散度）和交叉熵损失联合训练。",
+        "客户端上传本地更新后的模型至服务器。",
+        "服务器聚合客户端模型得到新全局模型，更新历史模型缓冲区。"
+      ],
+      "applications": "图像分类（CIFAR-10/100, Tiny-ImageNet）；文本分类（AG News, SST5）；边缘智能隐私敏感场景（自动驾驶、无人机感知、异常检测、医疗等）",
+      "limitations": "The paper does not explicitly state limitations of the proposed FedGKD method. Potential limitations include reliance on convergence assumptions, memory overhead for historical model buffer, and evaluation limited to small-scale datasets.",
+      "limitation_points": [
+        {
+          "point": "The convergence guarantee relies on common assumptions (e.g., smoothness, bounded gradients) that may not hold in highly heterogeneous practical settings.",
+          "evidence": "The proposed method is guaranteed to converge under common assumptions (abstract).",
+          "type": "inferred",
+          "severity": "medium"
+        },
+        {
+          "point": "The server needs to maintain a buffer of historical global models for ensemble, which introduces memory overhead, especially for large models.",
+          "evidence": "At each communication round, FEDGKD ensembles the historical global models in the server buffer by averaging the model parameters (Section I).",
+          "type": "inferred",
+          "severity": "medium"
+        },
+        {
+          "point": "Evaluation is performed only on small‐scale CV and NLP datasets (CIFAR-10/100, Tiny-ImageNet, AG News, SST5); scalability to larger or more complex tasks is not explored.",
+          "evidence": "We evaluate FedGKD through extensive experiments across various CV and NLP datasets (i.e., CIFAR-10/100, Tiny-ImageNet, AG News, SST5) (abstract).",
+          "type": "inferred",
+          "severity": "medium"
+        }
+      ],
+      "citations": [
+        {
+          "title": "Bonawitz et al., “Practical secure aggregation for privacy-preserving machine learning,” in Proc",
+          "authors": [
+            "in Proc. CCS"
+          ],
+          "year": 2017,
+          "venue": null,
+          "doi": null
+        },
+        {
+          "title": "Samuli and A",
+          "authors": [
+            "L. Samuli",
+            "A. Timo",
+            "in Proc. ICLR"
+          ],
+          "year": 2017,
+          "venue": null,
+          "doi": null
+        },
+        {
+          "title": "Tarvainen and H",
+          "authors": [
+            "A. Tarvainen",
+            "H. Valpola",
+            "in Proc. NeurIPS"
+          ],
+          "year": 2017,
+          "venue": null,
+          "doi": null
+        },
+        {
+          "title": "Vaswani et al., “Attention is all you need,” in Proc",
+          "authors": [
+            "in Proc. NeurIPS"
+          ],
+          "year": 2017,
+          "venue": null,
+          "doi": null
+        },
+        {
+          "title": "McMahan, D",
+          "authors": [
+            "H. B. McMahan",
+            "D. Ramage",
+            "K. Talwar",
+            "L. Zhang",
+            "in Proc. ICLR"
+          ],
+          "year": 2018,
+          "venue": null,
+          "doi": null
+        },
+        {
+          "title": "Nedi´c, A",
+          "authors": [
+            "A. Nedi´c",
+            "A. Olshevsky",
+            "M. G. Rabbat",
+            "Network topology",
+            "Proc. IEEE"
+          ],
+          "year": 2018,
+          "venue": null,
+          "doi": null
+        },
+        {
+          "title": "Elbamby et al., “Wireless edge computing with latency and reliability guarantees,” Proc",
+          "authors": [
+            "Proc. IEEE"
+          ],
+          "year": 2019,
+          "venue": null,
+          "doi": null
+        },
+        {
+          "title": "Hsu, H",
+          "authors": [
+            "T.-M. H. Hsu",
+            "H. Qi",
+            "M. Brown"
+          ],
+          "year": 2019,
+          "venue": null,
+          "doi": null
+        },
+        {
+          "title": "Li and J",
+          "authors": [
+            "D. Li",
+            "J. Wang"
+          ],
+          "year": 2019,
+          "venue": null,
+          "doi": null
+        },
+        {
+          "title": "Acar, Y",
+          "authors": [
+            "D. A. E. Acar",
+            "Y. Zhao",
+            "R. Matas",
+            "M. Mattina",
+            "P. Whatmough",
+            "V. Saligrama",
+            "in Proc. ICLR"
+          ],
+          "year": 2020,
+          "venue": null,
+          "doi": null
+        },
+        {
+          "title": "Annavaram, and S",
+          "authors": [
+            "C. He",
+            "M. Annavaram",
+            "S. Avestimehr",
+            "in Proc. NeurIPS"
+          ],
+          "year": 2020,
+          "venue": null,
+          "doi": null
+        },
+        {
+          "title": "Authorized licensed use limited to: WUHAN UNIVERSITY OF TECHNOLOGY",
+          "authors": [
+            "F. Sattler",
+            "S. Wiedemann",
+            "K.-R. Müller",
+            "W. Samek"
+          ],
+          "year": 2020,
+          "venue": null,
+          "doi": null
+        },
+        {
+          "title": "Karimireddy, S",
+          "authors": [
+            "S. P. Karimireddy",
+            "S. Kale",
+            "M. Mohri",
+            "S. Reddi",
+            "S. Stich",
+            "A. T. Suresh",
+            "in Proc. ICML"
+          ],
+          "year": 2020,
+          "venue": null,
+          "doi": null
+        },
+        {
+          "title": "Lin, L",
+          "authors": [
+            "T. Lin",
+            "L. Kong",
+            "S. U. Stich",
+            "M. Jaggi",
+            "in Proc. NeurIPS"
+          ],
+          "year": 2020,
+          "venue": null,
+          "doi": null
+        },
+        {
+          "title": "Mirzadeh, M",
+          "authors": [
+            "S. I. Mirzadeh",
+            "M. Farajtabar",
+            "A. Li",
+            "N. Levine",
+            "A. Matsukawa",
+            "H. Ghasemzadeh",
+            "in Proc. AAAI"
+          ],
+          "year": 2020,
+          "venue": null,
+          "doi": null
+        },
+        {
+          "title": "Reddi et al., “Adaptive federated optimization,” in Proc",
+          "authors": [
+            "in Proc. ICLR"
+          ],
+          "year": 2020,
+          "venue": null,
+          "doi": null
+        },
+        {
+          "title": "Sahu, M",
+          "authors": [
+            "T. Li",
+            "A. K. Sahu",
+            "M. Zaheer",
+            "M. Sanjabi",
+            "A. Talwalkar",
+            "V. Smith",
+            "in Proc. MLSys"
+          ],
+          "year": 2020,
+          "venue": null,
+          "doi": null
+        },
+        {
+          "title": "Seo, J",
+          "authors": [
+            "H. Seo",
+            "J. Park",
+            "S. Oh",
+            "M. Bennis",
+            "S.-L. Kim"
+          ],
+          "year": 2020,
+          "venue": null,
+          "doi": null
+        },
+        {
+          "title": "Tsukada, M",
+          "authors": [
+            "M. Tsukada",
+            "M. Kondo",
+            "H. Matsutani",
+            "IEEE Trans. Comput"
+          ],
+          "year": 2020,
+          "venue": null,
+          "doi": null
+        },
+        {
+          "title": "Wang, M",
+          "authors": [
+            "H. Wang",
+            "M. Yurochkin",
+            "Y. Sun",
+            "D. Papailiopoulos",
+            "Y. Khazaeni",
+            "in Proc. ICLR"
+          ],
+          "year": 2020,
+          "venue": null,
+          "doi": null
+        },
+        {
+          "title": "Yoon, S",
+          "authors": [
+            "T. Yoon",
+            "S. Shin",
+            "S. J. Hwang",
+            "E. Yang",
+            "in Proc. ICLR"
+          ],
+          "year": 2020,
+          "venue": null,
+          "doi": null
+        },
+        {
+          "title": "Chen and W.-L",
+          "authors": [
+            "H.-Y. Chen",
+            "W.-L. Chao",
+            "in Proc. ICLR"
+          ],
+          "year": 2021,
+          "venue": null,
+          "doi": null
+        },
+        {
+          "title": "Diao, J",
+          "authors": [
+            "E. Diao",
+            "J. Ding",
+            "V. Tarokh",
+            "HeteroFL: Computation",
+            "in Proc. ICLR"
+          ],
+          "year": 2021,
+          "venue": null,
+          "doi": null
+        },
+        {
+          "title": "He, and D",
+          "authors": [
+            "Q. Li",
+            "B. He",
+            "D. Song",
+            "in Proc. CVPR"
+          ],
+          "year": 2021,
+          "venue": null,
+          "doi": null
+        },
+        {
+          "title": "Jiang, X",
+          "authors": [
+            "X. Li",
+            "M. Jiang",
+            "X. Zhang",
+            "M. Kamp",
+            "Q. Dou",
+            "in Proc. ICLR"
+          ],
+          "year": 2021,
+          "venue": null,
+          "doi": null
+        },
+        {
+          "title": "Kim, B",
+          "authors": [
+            "K. Kim",
+            "B. Ji",
+            "D. Yoon",
+            "S. Hwang",
+            "in Proc. CVPR"
+          ],
+          "year": 2021,
+          "venue": null,
+          "doi": null
+        },
+        {
+          "title": "Lai, X",
+          "authors": [
+            "F. Lai",
+            "X. Zhu",
+            "H. V. Madhyastha",
+            "M. Chowdhury",
+            "in Proc. OSDI"
+          ],
+          "year": 2021,
+          "venue": null,
+          "doi": null
+        },
+        {
+          "title": "Lai, Y",
+          "authors": [
+            "D. Li",
+            "Z. Hu",
+            "Z. Lai",
+            "Y. Zhang",
+            "K. Lu",
+            "IEEE Trans. Comput"
+          ],
+          "year": 2021,
+          "venue": null,
+          "doi": null
+        },
+        {
+          "title": "Lin, R",
+          "authors": [
+            "W. Wu",
+            "L. He",
+            "W. Lin",
+            "R. Mao",
+            "C. Maple",
+            "S. A. Jarvis",
+            "IEEE Trans. Comput"
+          ],
+          "year": 2021,
+          "venue": null,
+          "doi": null
+        },
+        {
+          "title": "Menshchikov et al., “Real-time detection of hogweed: UAV platform empowered by deep learning,” IEEE Trans",
+          "authors": [
+            "IEEE Trans. Comput"
+          ],
+          "year": 2021,
+          "venue": null,
+          "doi": null
+        },
+        {
+          "title": "Zhu, J",
+          "authors": [
+            "Z. Zhu",
+            "J. Hong",
+            "J. Zhou",
+            "in Proc. ICML"
+          ],
+          "year": 2021,
+          "venue": null,
+          "doi": null
+        },
+        {
+          "title": "Chen, G",
+          "authors": [
+            "F. Chen",
+            "G. Long",
+            "Z. Wu",
+            "T. Zhou",
+            "J. Jiang",
+            "in Proc. IJCAI"
+          ],
+          "year": 2022,
+          "venue": null,
+          "doi": null
+        },
+        {
+          "title": "Dai, L",
+          "authors": [
+            "R. Dai",
+            "L. Shen",
+            "F. He",
+            "X. Tian",
+            "D. Tao",
+            "in Proc. ICML"
+          ],
+          "year": 2022,
+          "venue": null,
+          "doi": null
+        },
+        {
+          "title": "Huba et al., “PAPAYA: Practical, private, and scalable federated learning,” in Proc",
+          "authors": [
+            "PAPAYA: Practical",
+            "in Proc. MLSys"
+          ],
+          "year": 2022,
+          "venue": null,
+          "doi": null
+        },
+        {
+          "title": "Lim et al., “Decentralized edge intelligence: A dynamic resource allocation framework for hierarchical federated learning,” IEEE Trans",
+          "authors": [
+            "IEEE Trans. Parallel Distrib. Syst"
+          ],
+          "year": 2022,
+          "venue": null,
+          "doi": null
+        },
+        {
+          "title": "Tan et al., “FedProto: Federated prototype learning across heteroge- neous clients,” in Proc",
+          "authors": [
+            "in Proc. AAAI"
+          ],
+          "year": 2022,
+          "venue": null,
+          "doi": null
+        },
+        {
+          "title": "Zhan, P",
+          "authors": [
+            "Y. Zhan",
+            "P. Li",
+            "L. Wu",
+            "S. Guo",
+            "IEEE Trans. Comput"
+          ],
+          "year": 2022,
+          "venue": null,
+          "doi": null
+        },
+        {
+          "title": "Zhang et al., “Adaptive federated learning on non-IID data with resource constraint,” IEEE Trans",
+          "authors": [
+            "IEEE Trans. Comput"
+          ],
+          "year": 2022,
+          "venue": null,
+          "doi": null
+        },
+        {
+          "title": "Zhang, L",
+          "authors": [
+            "L. Zhang",
+            "L. Shen",
+            "L. Ding",
+            "D. Tao",
+            "L.-Y. Duan",
+            "in Proc. CVPR"
+          ],
+          "year": 2022,
+          "venue": null,
+          "doi": null
+        }
+      ],
+      "relationships": [],
+      "analysis_json_path": "src/data/analysis/87d436b64da24ff299d73231b6c3588b-fedgkd-toward-heterogeneous-federated-learning-.json",
+      "needs_human_review": false,
+      "created_at": "2026-06-23T06:17:03.748587Z",
+      "updated_at": "2026-06-23T06:17:03.748587Z",
+      "venue_source": "semantic_scholar_doi",
+      "doi": "10.1109/TC.2023.3315066",
+      "arxiv_id": "2011.02367",
+      "source_url": "https://www.semanticscholar.org/paper/309da6fa5cc6876404506595feb54b28e2a77e5b",
+      "citation_text": "Dezhong Yao, Wanning Pan, Yutong Dai, Yao Wan, Xiaofeng Ding, Chen Yu, Hai Jin, Zheng Xu, Lichao Sun (2024). FEDGKD: Toward Heterogeneous Federated Learning via Global Knowledge Distillation. IEEE transactions on computers.",
+      "bibtex": "@article{Yao2024FEDGKD,\n  title = {FEDGKD: Toward Heterogeneous Federated Learning via Global Knowledge Distillation},\n  author = {Dezhong Yao and Wanning Pan and Yutong Dai and Yao Wan and Xiaofeng Ding and Chen Yu and Hai Jin and Zheng Xu and Lichao Sun},\n  year = {2024},\n  journal = {IEEE transactions on computers},\n  doi = {10.1109/TC.2023.3315066}\n}",
+      "metadata_confidence": 0.95,
+      "metadata_source_method": "semantic_scholar_doi",
+      "metadata_verification_notes": "PDF 摘录与 Semantic Scholar 远程候选高度一致，作者列表、摘要、年份和 DOI 完全匹配，仅标题开头缺少 ‘FEDGKD:’ 部分，已根据 PDF 修正。元数据完整可靠，置信度极高。",
+      "source_candidates": [
+        {
+          "provider": "local_pdf",
+          "title": "IEEE TRANSACTIONS ON COMPUTERS, VOL. 73, NO. 1, JANUARY 2024",
+          "authors": [
+            "FEDGKD: Toward Heterogeneous Federated"
+          ],
+          "abstract": "Federated learning, as one enabling technology of edge intelligence, has gained substantial attention due to its efﬁ- cacy in training deep learning models without data privacy and network bandwidth concerns. However, due to the heterogeneity of the edge computing system and data, many methods suffer from the “client-drift” issue that could considerably impede the convergence of global model training: local models on clients can drift apart, and the aggregated model can be different from the global optimum. To tackle this issue, one intuitive idea is to guide the local model training by global teachers, i.e., past global models, where each client learns the global knowledge from past global models via adaptive knowledge distillation techniques. Inspired by these insights, we propose a novel approach for heterogeneous federated learning, FEDGKD, which fuses the knowledge from historical global models and guides local training to alleviate the “client-drift” issue. In this paper, we evaluate FEDGKD through extensive experiments across various CV and NLP datasets (i.e., CIFAR-10/100, Tiny-ImageNet, AG News, SST5) under different heterogeneous settings. The proposed method is guaranteed to converge under common assumptions and outperforms the state-of-the-art baselines in the non-IID federated setting. Index Terms—Heterogeneous federated learning, non-IID, knowledge distillation, edge intelligence.",
+          "year": 2024,
+          "venue": null,
+          "doi": "10.1109/TC.2023.3315066",
+          "arxiv_id": null,
+          "source_url": null,
+          "citation_text": null,
+          "bibtex": null,
+          "confidence": 0.95,
+          "reason": "来自本地 PDF 首页与摘要区域提取。"
+        },
+        {
+          "provider": "semantic_scholar_doi",
+          "title": ": Toward Heterogeneous Federated Learning via Global Knowledge Distillation",
+          "authors": [
+            "Dezhong Yao",
+            "Wanning Pan",
+            "Yutong Dai",
+            "Yao Wan",
+            "Xiaofeng Ding",
+            "Chen Yu",
+            "Hai Jin",
+            "Zheng Xu",
+            "Lichao Sun"
+          ],
+          "abstract": "Federated learning, as one enabling technology of edge intelligence, has gained substantial attention due to its efficacy in training deep learning models without data privacy and network bandwidth concerns. However, due to the heterogeneity of the edge computing system and data, many methods suffer from the “client-drift” issue that could considerably impede the convergence of global model training: local models on clients can drift apart, and the aggregated model can be different from the global optimum. To tackle this issue, one intuitive idea is to guide the local model training by global teachers, i.e., past global models, where each client learns the global knowledge from past global models via adaptive knowledge distillation techniques. Inspired by these insights, we propose a novel approach for heterogeneous federated learning, FedGKD, which fuses the knowledge from historical global models and guides local training to alleviate the “client-drift” issue. In this paper, we evaluate FedGKD through extensive experiments across various CV and NLP datasets (i.e., CIFAR-10/100, Tiny-ImageNet, AG News, SST5) under different heterogeneous settings. The proposed method is guaranteed to converge under common assumptions and outperforms the state-of-the-art baselines in the non-IID federated setting.",
+          "year": 2024,
+          "venue": "IEEE transactions on computers",
+          "doi": "10.1109/TC.2023.3315066",
+          "arxiv_id": null,
+          "source_url": "https://www.semanticscholar.org/paper/309da6fa5cc6876404506595feb54b28e2a77e5b",
+          "citation_text": "Dezhong Yao, Wanning Pan, Yutong Dai, Yao Wan (2024). : Toward Heterogeneous Federated Learning via Global Knowledge Distillation. IEEE transactions on computers.",
+          "bibtex": "@article{dezhongyao2024,\n  title = {: Toward Heterogeneous Federated Learning via Global Knowledge Distillation},\n  author = {Dezhong Yao and Wanning Pan and Yutong Dai and Yao Wan and Xiaofeng Ding and Chen Yu and Hai Jin and Zheng Xu and Lichao Sun},\n  year = {2024},\n  journal = {IEEE transactions on computers},\n  doi = {10.1109/TC.2023.3315066}\n}",
+          "confidence": 0.6467,
+          "reason": "标题相似度 0.15，包含 DOI，作者数 9"
         }
       ]
     }

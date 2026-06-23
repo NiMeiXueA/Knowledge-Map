@@ -1,0 +1,610 @@
+{
+  "id": "87d436b64da24ff299d73231b6c3588b-fedgkd-toward-heterogeneous-federated-learning-",
+  "short": "Yao",
+  "title": "FEDGKD: Toward Heterogeneous Federated Learning via Global Knowledge Distillation",
+  "year": 2024,
+  "authors": [
+    "Dezhong Yao",
+    "Wanning Pan",
+    "Yutong Dai",
+    "Yao Wan",
+    "Xiaofeng Ding",
+    "Chen Yu",
+    "Hai Jin",
+    "Zheng Xu",
+    "Lichao Sun"
+  ],
+  "first_author": "Dezhong Yao",
+  "venue": "IEEE transactions on computers",
+  "abstract": "Federated learning, as one enabling technology of edge intelligence, has gained substantial attention due to its efficacy in training deep learning models without data privacy and network bandwidth concerns. However, due to the heterogeneity of the edge computing system and data, many methods suffer from the “client-drift” issue that could considerably impede the convergence of global model training: local models on clients can drift apart, and the aggregated model can be different from the global optimum. To tackle this issue, one intuitive idea is to guide the local model training by global teachers, i.e., past global models, where each client learns the global knowledge from past global models via adaptive knowledge distillation techniques. Inspired by these insights, we propose a novel approach for heterogeneous federated learning, FedGKD, which fuses the knowledge from historical global models and guides local training to alleviate the “client-drift” issue. In this paper, we evaluate FedGKD through extensive experiments across various CV and NLP datasets (i.e., CIFAR-10/100, Tiny-ImageNet, AG News, SST5) under different heterogeneous settings. The proposed method is guaranteed to converge under common assumptions and outperforms the state-of-the-art baselines in the non-IID federated setting.",
+  "summary": "针对异构联邦学习中的客户端漂移问题，提出FEDGKD框架。该方法利用历史全局模型的集成知识，通过知识蒸馏引导本地训练，在不引入额外隐私风险、不修改模型结构的前提下，缓解非独立同分布数据导致的模型偏移。在CV和NLP任务上验证了有效性，优于现有基线。",
+  "idea": "通过集成历史全局模型参数或预测作为教师，引导本地模型在特征空间上蒸馏全局知识，以正则化本地更新并缓解客户端漂移。",
+  "categories": [
+    "distillation"
+  ],
+  "source_path": "D:\\48174\\projects\\Knowledge-Map-App\\src\\data\\paper\\03_知识蒸馏与异构联邦\\87d436b64da24ff299d73231b6c3588b-fedgkd-toward-heterogeneous-federated-learning-.pdf",
+  "innovation": "提出一种无需代理数据、不修改模型结构、无额外隐私泄露的全局知识蒸馏联邦学习机制，利用历史全局模型的集成提供教师信号，适用于异构模型场景。",
+  "innovation_points": [
+    {
+      "point": "利用历史全局模型集成作为教师进行知识蒸馏，引导本地训练。",
+      "evidence": "摘要“fuses the knowledge from historical global models and guides local training”；正文“FEDGKD ensembles the historical global models in the server buffer by averaging the model parameters... serves as a guide (teacher) for local training on knowledge distillation.”",
+      "confidence": 0.9
+    },
+    {
+      "point": "无需代理数据、不修改模型结构、无额外隐私信息共享。",
+      "evidence": "Table I对比中三项均为✗，贡献中强调“without introducing any privacy risks or model structure modification requirements”。",
+      "confidence": 0.9
+    },
+    {
+      "point": "兼容异构模型框架，基于特征空间正则化而非参数空间约束。",
+      "evidence": "引言“FEDGKD is compatible with the existing heterogeneous model framework”，方法部分解释为何参数空间方法失效。",
+      "confidence": 0.9
+    },
+    {
+      "point": "提出两种变体：FEDGKD（服务器端参数平均集成）和FEDGKD-VOTE（客户端集成预测）。",
+      "evidence": "正文“We also develop FEDGKD-VOTE, by broadcasting the historical global models... to ensemble their predictions on the client side.”",
+      "confidence": 0.9
+    }
+  ],
+  "flow_steps": [
+    "服务器端维护历史全局模型缓冲区（滑动窗口）。",
+    "每轮通信：服务器选取近期全局模型，通过参数平均（FEDGKD）或直接分发（FEDGKD-VOTE）生成教师模型并广播给参与客户端。",
+    "客户端接收教师模型，结合本地数据计算知识蒸馏损失（如KL散度）和交叉熵损失联合训练。",
+    "客户端上传本地更新后的模型至服务器。",
+    "服务器聚合客户端模型得到新全局模型，更新历史模型缓冲区。"
+  ],
+  "applications": "图像分类（CIFAR-10/100, Tiny-ImageNet）；文本分类（AG News, SST5）；边缘智能隐私敏感场景（自动驾驶、无人机感知、异常检测、医疗等）",
+  "limitations": "The paper does not explicitly state limitations of the proposed FedGKD method. Potential limitations include reliance on convergence assumptions, memory overhead for historical model buffer, and evaluation limited to small-scale datasets.",
+  "limitation_points": [
+    {
+      "point": "The convergence guarantee relies on common assumptions (e.g., smoothness, bounded gradients) that may not hold in highly heterogeneous practical settings.",
+      "evidence": "The proposed method is guaranteed to converge under common assumptions (abstract).",
+      "type": "inferred",
+      "severity": "medium"
+    },
+    {
+      "point": "The server needs to maintain a buffer of historical global models for ensemble, which introduces memory overhead, especially for large models.",
+      "evidence": "At each communication round, FEDGKD ensembles the historical global models in the server buffer by averaging the model parameters (Section I).",
+      "type": "inferred",
+      "severity": "medium"
+    },
+    {
+      "point": "Evaluation is performed only on small‐scale CV and NLP datasets (CIFAR-10/100, Tiny-ImageNet, AG News, SST5); scalability to larger or more complex tasks is not explored.",
+      "evidence": "We evaluate FedGKD through extensive experiments across various CV and NLP datasets (i.e., CIFAR-10/100, Tiny-ImageNet, AG News, SST5) (abstract).",
+      "type": "inferred",
+      "severity": "medium"
+    }
+  ],
+  "citations": [
+    {
+      "title": "Bonawitz et al., “Practical secure aggregation for privacy-preserving machine learning,” in Proc",
+      "authors": [
+        "in Proc. CCS"
+      ],
+      "year": 2017,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Samuli and A",
+      "authors": [
+        "L. Samuli",
+        "A. Timo",
+        "in Proc. ICLR"
+      ],
+      "year": 2017,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Tarvainen and H",
+      "authors": [
+        "A. Tarvainen",
+        "H. Valpola",
+        "in Proc. NeurIPS"
+      ],
+      "year": 2017,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Vaswani et al., “Attention is all you need,” in Proc",
+      "authors": [
+        "in Proc. NeurIPS"
+      ],
+      "year": 2017,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "McMahan, D",
+      "authors": [
+        "H. B. McMahan",
+        "D. Ramage",
+        "K. Talwar",
+        "L. Zhang",
+        "in Proc. ICLR"
+      ],
+      "year": 2018,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Nedi´c, A",
+      "authors": [
+        "A. Nedi´c",
+        "A. Olshevsky",
+        "M. G. Rabbat",
+        "Network topology",
+        "Proc. IEEE"
+      ],
+      "year": 2018,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Elbamby et al., “Wireless edge computing with latency and reliability guarantees,” Proc",
+      "authors": [
+        "Proc. IEEE"
+      ],
+      "year": 2019,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Hsu, H",
+      "authors": [
+        "T.-M. H. Hsu",
+        "H. Qi",
+        "M. Brown"
+      ],
+      "year": 2019,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Li and J",
+      "authors": [
+        "D. Li",
+        "J. Wang"
+      ],
+      "year": 2019,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Acar, Y",
+      "authors": [
+        "D. A. E. Acar",
+        "Y. Zhao",
+        "R. Matas",
+        "M. Mattina",
+        "P. Whatmough",
+        "V. Saligrama",
+        "in Proc. ICLR"
+      ],
+      "year": 2020,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Annavaram, and S",
+      "authors": [
+        "C. He",
+        "M. Annavaram",
+        "S. Avestimehr",
+        "in Proc. NeurIPS"
+      ],
+      "year": 2020,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Authorized licensed use limited to: WUHAN UNIVERSITY OF TECHNOLOGY",
+      "authors": [
+        "F. Sattler",
+        "S. Wiedemann",
+        "K.-R. Müller",
+        "W. Samek"
+      ],
+      "year": 2020,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Karimireddy, S",
+      "authors": [
+        "S. P. Karimireddy",
+        "S. Kale",
+        "M. Mohri",
+        "S. Reddi",
+        "S. Stich",
+        "A. T. Suresh",
+        "in Proc. ICML"
+      ],
+      "year": 2020,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Lin, L",
+      "authors": [
+        "T. Lin",
+        "L. Kong",
+        "S. U. Stich",
+        "M. Jaggi",
+        "in Proc. NeurIPS"
+      ],
+      "year": 2020,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Mirzadeh, M",
+      "authors": [
+        "S. I. Mirzadeh",
+        "M. Farajtabar",
+        "A. Li",
+        "N. Levine",
+        "A. Matsukawa",
+        "H. Ghasemzadeh",
+        "in Proc. AAAI"
+      ],
+      "year": 2020,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Reddi et al., “Adaptive federated optimization,” in Proc",
+      "authors": [
+        "in Proc. ICLR"
+      ],
+      "year": 2020,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Sahu, M",
+      "authors": [
+        "T. Li",
+        "A. K. Sahu",
+        "M. Zaheer",
+        "M. Sanjabi",
+        "A. Talwalkar",
+        "V. Smith",
+        "in Proc. MLSys"
+      ],
+      "year": 2020,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Seo, J",
+      "authors": [
+        "H. Seo",
+        "J. Park",
+        "S. Oh",
+        "M. Bennis",
+        "S.-L. Kim"
+      ],
+      "year": 2020,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Tsukada, M",
+      "authors": [
+        "M. Tsukada",
+        "M. Kondo",
+        "H. Matsutani",
+        "IEEE Trans. Comput"
+      ],
+      "year": 2020,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Wang, M",
+      "authors": [
+        "H. Wang",
+        "M. Yurochkin",
+        "Y. Sun",
+        "D. Papailiopoulos",
+        "Y. Khazaeni",
+        "in Proc. ICLR"
+      ],
+      "year": 2020,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Yoon, S",
+      "authors": [
+        "T. Yoon",
+        "S. Shin",
+        "S. J. Hwang",
+        "E. Yang",
+        "in Proc. ICLR"
+      ],
+      "year": 2020,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Chen and W.-L",
+      "authors": [
+        "H.-Y. Chen",
+        "W.-L. Chao",
+        "in Proc. ICLR"
+      ],
+      "year": 2021,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Diao, J",
+      "authors": [
+        "E. Diao",
+        "J. Ding",
+        "V. Tarokh",
+        "HeteroFL: Computation",
+        "in Proc. ICLR"
+      ],
+      "year": 2021,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "He, and D",
+      "authors": [
+        "Q. Li",
+        "B. He",
+        "D. Song",
+        "in Proc. CVPR"
+      ],
+      "year": 2021,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Jiang, X",
+      "authors": [
+        "X. Li",
+        "M. Jiang",
+        "X. Zhang",
+        "M. Kamp",
+        "Q. Dou",
+        "in Proc. ICLR"
+      ],
+      "year": 2021,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Kim, B",
+      "authors": [
+        "K. Kim",
+        "B. Ji",
+        "D. Yoon",
+        "S. Hwang",
+        "in Proc. CVPR"
+      ],
+      "year": 2021,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Lai, X",
+      "authors": [
+        "F. Lai",
+        "X. Zhu",
+        "H. V. Madhyastha",
+        "M. Chowdhury",
+        "in Proc. OSDI"
+      ],
+      "year": 2021,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Lai, Y",
+      "authors": [
+        "D. Li",
+        "Z. Hu",
+        "Z. Lai",
+        "Y. Zhang",
+        "K. Lu",
+        "IEEE Trans. Comput"
+      ],
+      "year": 2021,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Lin, R",
+      "authors": [
+        "W. Wu",
+        "L. He",
+        "W. Lin",
+        "R. Mao",
+        "C. Maple",
+        "S. A. Jarvis",
+        "IEEE Trans. Comput"
+      ],
+      "year": 2021,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Menshchikov et al., “Real-time detection of hogweed: UAV platform empowered by deep learning,” IEEE Trans",
+      "authors": [
+        "IEEE Trans. Comput"
+      ],
+      "year": 2021,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Zhu, J",
+      "authors": [
+        "Z. Zhu",
+        "J. Hong",
+        "J. Zhou",
+        "in Proc. ICML"
+      ],
+      "year": 2021,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Chen, G",
+      "authors": [
+        "F. Chen",
+        "G. Long",
+        "Z. Wu",
+        "T. Zhou",
+        "J. Jiang",
+        "in Proc. IJCAI"
+      ],
+      "year": 2022,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Dai, L",
+      "authors": [
+        "R. Dai",
+        "L. Shen",
+        "F. He",
+        "X. Tian",
+        "D. Tao",
+        "in Proc. ICML"
+      ],
+      "year": 2022,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Huba et al., “PAPAYA: Practical, private, and scalable federated learning,” in Proc",
+      "authors": [
+        "PAPAYA: Practical",
+        "in Proc. MLSys"
+      ],
+      "year": 2022,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Lim et al., “Decentralized edge intelligence: A dynamic resource allocation framework for hierarchical federated learning,” IEEE Trans",
+      "authors": [
+        "IEEE Trans. Parallel Distrib. Syst"
+      ],
+      "year": 2022,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Tan et al., “FedProto: Federated prototype learning across heteroge- neous clients,” in Proc",
+      "authors": [
+        "in Proc. AAAI"
+      ],
+      "year": 2022,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Zhan, P",
+      "authors": [
+        "Y. Zhan",
+        "P. Li",
+        "L. Wu",
+        "S. Guo",
+        "IEEE Trans. Comput"
+      ],
+      "year": 2022,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Zhang et al., “Adaptive federated learning on non-IID data with resource constraint,” IEEE Trans",
+      "authors": [
+        "IEEE Trans. Comput"
+      ],
+      "year": 2022,
+      "venue": null,
+      "doi": null
+    },
+    {
+      "title": "Zhang, L",
+      "authors": [
+        "L. Zhang",
+        "L. Shen",
+        "L. Ding",
+        "D. Tao",
+        "L.-Y. Duan",
+        "in Proc. CVPR"
+      ],
+      "year": 2022,
+      "venue": null,
+      "doi": null
+    }
+  ],
+  "relationships": [],
+  "analysis_json_path": "src/data/analysis/87d436b64da24ff299d73231b6c3588b-fedgkd-toward-heterogeneous-federated-learning-.json",
+  "needs_human_review": false,
+  "created_at": "2026-06-23T06:17:03.748587Z",
+  "updated_at": "2026-06-23T06:17:03.748587Z",
+  "venue_source": "semantic_scholar_doi",
+  "doi": "10.1109/TC.2023.3315066",
+  "arxiv_id": "2011.02367",
+  "source_url": "https://www.semanticscholar.org/paper/309da6fa5cc6876404506595feb54b28e2a77e5b",
+  "citation_text": "Dezhong Yao, Wanning Pan, Yutong Dai, Yao Wan, Xiaofeng Ding, Chen Yu, Hai Jin, Zheng Xu, Lichao Sun (2024). FEDGKD: Toward Heterogeneous Federated Learning via Global Knowledge Distillation. IEEE transactions on computers.",
+  "bibtex": "@article{Yao2024FEDGKD,\n  title = {FEDGKD: Toward Heterogeneous Federated Learning via Global Knowledge Distillation},\n  author = {Dezhong Yao and Wanning Pan and Yutong Dai and Yao Wan and Xiaofeng Ding and Chen Yu and Hai Jin and Zheng Xu and Lichao Sun},\n  year = {2024},\n  journal = {IEEE transactions on computers},\n  doi = {10.1109/TC.2023.3315066}\n}",
+  "metadata_confidence": 0.95,
+  "metadata_source_method": "semantic_scholar_doi",
+  "metadata_verification_notes": "PDF 摘录与 Semantic Scholar 远程候选高度一致，作者列表、摘要、年份和 DOI 完全匹配，仅标题开头缺少 ‘FEDGKD:’ 部分，已根据 PDF 修正。元数据完整可靠，置信度极高。",
+  "source_candidates": [
+    {
+      "provider": "local_pdf",
+      "title": "IEEE TRANSACTIONS ON COMPUTERS, VOL. 73, NO. 1, JANUARY 2024",
+      "authors": [
+        "FEDGKD: Toward Heterogeneous Federated"
+      ],
+      "abstract": "Federated learning, as one enabling technology of edge intelligence, has gained substantial attention due to its efﬁ- cacy in training deep learning models without data privacy and network bandwidth concerns. However, due to the heterogeneity of the edge computing system and data, many methods suffer from the “client-drift” issue that could considerably impede the convergence of global model training: local models on clients can drift apart, and the aggregated model can be different from the global optimum. To tackle this issue, one intuitive idea is to guide the local model training by global teachers, i.e., past global models, where each client learns the global knowledge from past global models via adaptive knowledge distillation techniques. Inspired by these insights, we propose a novel approach for heterogeneous federated learning, FEDGKD, which fuses the knowledge from historical global models and guides local training to alleviate the “client-drift” issue. In this paper, we evaluate FEDGKD through extensive experiments across various CV and NLP datasets (i.e., CIFAR-10/100, Tiny-ImageNet, AG News, SST5) under different heterogeneous settings. The proposed method is guaranteed to converge under common assumptions and outperforms the state-of-the-art baselines in the non-IID federated setting. Index Terms—Heterogeneous federated learning, non-IID, knowledge distillation, edge intelligence.",
+      "year": 2024,
+      "venue": null,
+      "doi": "10.1109/TC.2023.3315066",
+      "arxiv_id": null,
+      "source_url": null,
+      "citation_text": null,
+      "bibtex": null,
+      "confidence": 0.95,
+      "reason": "来自本地 PDF 首页与摘要区域提取。"
+    },
+    {
+      "provider": "semantic_scholar_doi",
+      "title": ": Toward Heterogeneous Federated Learning via Global Knowledge Distillation",
+      "authors": [
+        "Dezhong Yao",
+        "Wanning Pan",
+        "Yutong Dai",
+        "Yao Wan",
+        "Xiaofeng Ding",
+        "Chen Yu",
+        "Hai Jin",
+        "Zheng Xu",
+        "Lichao Sun"
+      ],
+      "abstract": "Federated learning, as one enabling technology of edge intelligence, has gained substantial attention due to its efficacy in training deep learning models without data privacy and network bandwidth concerns. However, due to the heterogeneity of the edge computing system and data, many methods suffer from the “client-drift” issue that could considerably impede the convergence of global model training: local models on clients can drift apart, and the aggregated model can be different from the global optimum. To tackle this issue, one intuitive idea is to guide the local model training by global teachers, i.e., past global models, where each client learns the global knowledge from past global models via adaptive knowledge distillation techniques. Inspired by these insights, we propose a novel approach for heterogeneous federated learning, FedGKD, which fuses the knowledge from historical global models and guides local training to alleviate the “client-drift” issue. In this paper, we evaluate FedGKD through extensive experiments across various CV and NLP datasets (i.e., CIFAR-10/100, Tiny-ImageNet, AG News, SST5) under different heterogeneous settings. The proposed method is guaranteed to converge under common assumptions and outperforms the state-of-the-art baselines in the non-IID federated setting.",
+      "year": 2024,
+      "venue": "IEEE transactions on computers",
+      "doi": "10.1109/TC.2023.3315066",
+      "arxiv_id": null,
+      "source_url": "https://www.semanticscholar.org/paper/309da6fa5cc6876404506595feb54b28e2a77e5b",
+      "citation_text": "Dezhong Yao, Wanning Pan, Yutong Dai, Yao Wan (2024). : Toward Heterogeneous Federated Learning via Global Knowledge Distillation. IEEE transactions on computers.",
+      "bibtex": "@article{dezhongyao2024,\n  title = {: Toward Heterogeneous Federated Learning via Global Knowledge Distillation},\n  author = {Dezhong Yao and Wanning Pan and Yutong Dai and Yao Wan and Xiaofeng Ding and Chen Yu and Hai Jin and Zheng Xu and Lichao Sun},\n  year = {2024},\n  journal = {IEEE transactions on computers},\n  doi = {10.1109/TC.2023.3315066}\n}",
+      "confidence": 0.6467,
+      "reason": "标题相似度 0.15，包含 DOI，作者数 9"
+    }
+  ]
+}
