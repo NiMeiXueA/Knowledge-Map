@@ -21,3 +21,12 @@ src/data/runtime_kv.json
 # PyInstaller build artifacts (should never be committed)
 build_pyinstaller/
 dist_pyinstaller/
+*.spec
+
+# Tauri / Rust build artifacts
+src-tauri/target/
+# sidecar 二进制（由 build_backend.ps1 重新生成，体积巨大，不入库）
+src-tauri/binaries/*.exe
+
+# 干净打包用的虚拟环境
+.venv-build/

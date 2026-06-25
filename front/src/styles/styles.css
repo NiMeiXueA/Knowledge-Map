@@ -899,6 +899,80 @@ h3 { font-size: 20px; }
   color: var(--muted);
 }
 
+/* 创新点 / 局限性的分点列表 */
+.point-list {
+  list-style: none;
+  margin: 14px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+}
+
+.point-item {
+  padding: 14px 16px;
+  border-radius: var(--radius-lg);
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(30, 36, 48, 0.08);
+}
+
+.point-head {
+  margin: 0;
+  color: var(--ink, #1e2430);
+  font-weight: 600;
+  line-height: 1.6;
+}
+
+.point-evidence {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.point-tags {
+  margin: 10px 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  background: rgba(30, 36, 48, 0.06);
+  color: var(--muted);
+}
+
+.tag-type-paper_claimed {
+  background: rgba(47, 109, 164, 0.12);
+  color: #2f6da4;
+}
+
+.tag-type-inferred {
+  background: rgba(120, 113, 108, 0.14);
+  color: #78716c;
+}
+
+.tag-severity-low {
+  background: rgba(34, 139, 102, 0.14);
+  color: #1f7a4d;
+}
+
+.tag-severity-medium {
+  background: rgba(204, 138, 0, 0.16);
+  color: #b06d00;
+}
+
+.tag-severity-high {
+  background: rgba(190, 53, 53, 0.14);
+  color: #b03535;
+}
+
 .flow-diagram {
   display: grid;
   gap: 10px;

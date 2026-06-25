@@ -36,9 +36,16 @@ async def classify_paper(
         f"""
 可选大类：{category_list}
 
-请根据标题、摘要和正文片段进行分类。
-注意：必须从上方列表里选一个 id，不能自行编造或使用列表外的 id。
-输出字段：category_id, category_name, confidence, reason
+请根据标题、摘要和正文片段完成两件事：
+1. 分类：必须从上方列表里选一个 id，不能自行编造或使用列表外的 id。
+2. 论文缩写（short）：用于在知识图谱节点上显示，必须简短易辨识。
+   - 优先取该论文在学术界广泛使用的缩写/简称（如 BERT、FedAvg、ResNet），
+     这类缩写通常出现在标题括号、摘要或正文中。
+   - 若论文没有公认的缩写，则取标题首字母缩写（仅当该缩写在原文中出现过）。
+   - 若仍无合适缩写，则给出不超过 5 个英文单词的精简标题。
+   - 缩写长度限定 2-24 个字符，不要包含句号、引号或换行。
+
+输出字段：category_id, category_name, confidence, reason, short
 
 标题：
 {title}
@@ -47,7 +54,7 @@ async def classify_paper(
 {abstract}
 
 正文片段：
-{raw_text[:5000]}
+{raw_text[:]}
 """.strip(),
     )
     return result

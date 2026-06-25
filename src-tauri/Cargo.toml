@@ -13,7 +13,7 @@ rust-version = "1.70"
 tauri-build = { version = "1.5", features = [] }
 
 [dependencies]
-tauri = { version = "1.6", features = ["dialog-open", "path-all", "http-all", "fs-all", "protocol-all", "updater", "process-relaunch"] }
+tauri = { version = "1.6", features = ["dialog-open", "path-all", "http-all", "fs-all", "protocol-all", "updater", "process-relaunch", "devtools"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 # reqwest 用于在 Rust 端轮询 /api/health（与 Python 端健康自检互补）

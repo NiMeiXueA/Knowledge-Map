@@ -45,7 +45,7 @@
       }
     },
     "security": {
-      "csp": null
+      "csp": "default-src 'self' tauri: asset:; img-src 'self' data: blob: asset: http://asset.localhost tauri:; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; connect-src 'self' http://127.0.0.1:* http://localhost:* ws://127.0.0.1:* ws://localhost:* ipc: http://ipc.localhost tauri:; font-src 'self' data:"
     },
     "windows": [
       {

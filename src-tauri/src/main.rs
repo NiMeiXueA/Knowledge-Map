@@ -4,7 +4,8 @@
 )]
 
 use std::env;
-use std::io::{BufRead, BufReader};
+use std::fs::OpenOptions;
+use std::io::{BufRead, BufReader, Write};
 use std::path::PathBuf;
 use std::process::{Child, Command, Stdio};
 use std::sync::{Arc, Mutex, mpsc};
@@ -12,9 +13,155 @@ use std::time::{Duration, Instant};
 
 use tauri::{Manager, WindowEvent};
 
+#[cfg(target_os = "windows")]
+use std::os::windows::process::CommandExt;
+
+#[cfg(target_os = "windows")]
+const CREATE_NO_WINDOW: u32 = 0x08000000;
+
+// Windows Job Object：把 sidecar（含 PyInstaller onefile 的 Python 子进程）
+// 绑定到 Tauri 主进程生命周期。Tauri 退出（含崩溃、强杀）时 Windows 内核
+// 自动级联 kill job 内全部进程，根治 python.exe 孤儿问题。
+// 比 Python 端 watchdog 更可靠：不依赖子进程协作，不依赖 ctypes 调用。
+#[cfg(target_os = "windows")]
+mod win_job {
+    #![allow(non_camel_case_types, non_upper_case_globals)]
+    use std::os::windows::io::AsRawHandle;
+    use std::process::Child;
+
+    type HANDLE = *mut std::ffi::c_void;
+    type BOOL = i32;
+    type DWORD = u32;
+    type ULONG_PTR = usize;
+
+    const JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE: ULONG_PTR = 0x2000;
+    const JobObjectExtendedLimitInformation: DWORD = 9;
+
+    #[repr(C)]
+    #[derive(Default)]
+    struct IoCounters {
+        _0: u64,
+        _1: u64,
+        _2: u64,
+        _3: u64,
+        _4: u64,
+        _5: u64,
+    }
+
+    #[repr(C)]
+    #[derive(Default)]
+    struct JobObjectBasicLimitInformation {
+        _per_process_user_time: i64,
+        _per_job_user_time: i64,
+        limit_flags: ULONG_PTR,
+        _min_ws: usize,
+        _max_ws: usize,
+        _active_process_limit: u32,
+        _affinity: ULONG_PTR,
+        _priority_class: u32,
+        _scheduling_class: u32,
+    }
+
+    #[repr(C)]
+    #[derive(Default)]
+    struct JobObjectExtendedLimitInformation {
+        basic: JobObjectBasicLimitInformation,
+        io: IoCounters,
+        _process_memory_limit: usize,
+        _job_memory_limit: usize,
+        _peak_process_memory_used: usize,
+        _peak_job_memory_used: usize,
+    }
+
+    extern "system" {
+        fn CreateJobObjectW(lp_job_attributes: *mut std::ffi::c_void, lp_name: *const u16) -> HANDLE;
+        fn SetInformationJobObject(
+            h_job: HANDLE,
+            info_class: DWORD,
+            info: *mut std::ffi::c_void,
+            info_len: DWORD,
+        ) -> BOOL;
+        fn AssignProcessToJobObject(h_job: HANDLE, h_process: HANDLE) -> BOOL;
+        fn CloseHandle(h: HANDLE) -> BOOL;
+    }
+
+    /// 把 child 加入 KillOnJobClose 的 Job Object。
+    ///
+    /// job handle 故意 leak：生命周期等同于 Tauri 主进程。Tauri 进程退出
+    /// （含崩溃、任务管理器强杀）时 Windows 自动关闭 handle，触发
+    /// KillOnJobClose，job 内所有进程级联 kill。
+    ///
+    /// 必须在 child spawn 后立即调用：PyInstaller onefile 的 boot loader
+    /// 会很快 fork Python 子进程，趁早把 boot loader 加入 job，后续 fork
+    /// 出来的 Python 子进程会自动继承 job 归属（Windows 8+ 默认行为）。
+    pub fn assign_to_kill_on_close_job(child: &Child) -> std::io::Result<()> {
+        let job = unsafe { CreateJobObjectW(std::ptr::null_mut(), std::ptr::null()) };
+        if job.is_null() {
+            return Err(std::io::Error::last_os_error());
+        }
+
+        let mut info = JobObjectExtendedLimitInformation::default();
+        info.basic.limit_flags = JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE;
+        let rc = unsafe {
+            SetInformationJobObject(
+                job,
+                JobObjectExtendedLimitInformation,
+                &mut info as *mut _ as *mut std::ffi::c_void,
+                std::mem::size_of::<JobObjectExtendedLimitInformation>() as DWORD,
+            )
+        };
+        if rc == 0 {
+            let err = std::io::Error::last_os_error();
+            unsafe { CloseHandle(job) };
+            return Err(err);
+        }
+
+        let proc_handle = child.as_raw_handle() as usize as HANDLE;
+        let rc = unsafe { AssignProcessToJobObject(job, proc_handle) };
+        if rc == 0 {
+            let err = std::io::Error::last_os_error();
+            unsafe { CloseHandle(job) };
+            return Err(err);
+        }
+
+        // 故意 leak：raw pointer 没有 Drop，绑定到本地变量即可保持 handle 打开。
+        // 函数返回后 job 变量超出作用域，但 raw pointer 不会被关闭。
+        let _leaked = job;
+        Ok(())
+    }
+}
+
 const LISTENING_TAG: &str = "KNOWLEDGE_MAP_LISTENING_ON";
 const ERROR_TAG: &str = "KNOWLEDGE_MAP_ERROR";
 const BACKEND_READY_TIMEOUT_SECS: u64 = 90;
+
+/// 诊断日志：所有关键事件 + sidecar stdout/stderr 都同步落到这里。
+/// release 模式下 windows_subsystem="windows" 看不到 eprintln，
+/// 没有 backend-debug.log 就完全黑盒。
+fn log_path() -> Option<PathBuf> {
+    user_data_dir().map(|d| d.join("backend-debug.log"))
+}
+
+fn log_line(msg: impl AsRef<str>) {
+    let msg = msg.as_ref();
+    let stamped = format!("[{}] {}", chrono_like_stamp(), msg);
+    eprintln!("{}", stamped);
+    if let Some(path) = log_path() {
+        if let Ok(mut f) = OpenOptions::new().create(true).append(true).open(&path) {
+            let _ = writeln!(f, "{}", stamped);
+        }
+    }
+}
+
+fn chrono_like_stamp() -> String {
+    let now = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap_or_default();
+    let secs = now.as_secs();
+    let millis = now.subsec_millis();
+    let (h, m, s) = ((secs / 3600) % 24, (secs / 60) % 60, secs % 60);
+    format!("{:02}:{:02}:{:02}.{:03}", h, m, s, millis)
+}
 
 #[derive(Clone, Default)]
 struct BackendState {
@@ -67,7 +214,8 @@ fn resolve_sidecar(name: &str) -> PathBuf {
     } else {
         ""
     };
-    let sidecar_name = format!("{}-{}{}", name, target_triple, ext);
+    let sidecar_name_with_triple = format!("{}-{}{}", name, target_triple, ext);
+    let sidecar_name_bare = format!("{}{}", name, ext);
 
     // In dev mode (cargo tauri dev), look in target/debug/
     if let Ok(manifest_dir) = env::var("CARGO_MANIFEST_DIR") {
@@ -76,7 +224,7 @@ fn resolve_sidecar(name: &str) -> PathBuf {
             .unwrap()
             .join("target")
             .join("debug")
-            .join(&sidecar_name);
+            .join(&sidecar_name_with_triple);
         if dev_path.exists() {
             return dev_path;
         }
@@ -85,9 +233,15 @@ fn resolve_sidecar(name: &str) -> PathBuf {
     // In release mode, look next to the current exe
     if let Ok(exe) = env::current_exe() {
         if let Some(dir) = exe.parent() {
-            let release_path = dir.join(&sidecar_name);
+            // NSIS/MSI installers strip the target triple from the sidecar name
+            let release_path = dir.join(&sidecar_name_bare);
             if release_path.exists() {
                 return release_path;
+            }
+            // Dev-built sidecar keeps the target triple suffix
+            let release_path_triple = dir.join(&sidecar_name_with_triple);
+            if release_path_triple.exists() {
+                return release_path_triple;
             }
         }
     }
@@ -187,17 +341,68 @@ fn main() {
                 ));
             }
             sidecar_env.push(("KNOWLEDGE_MAP_DESKTOP".to_string(), "1".to_string()));
+            // 显式注入 Tauri 自己的 pid，sidecar 的 watchdog 监控这个 pid
+            // （os.getppid() 在 PyInstaller onefile 模式下拿到的是 boot loader pid，
+            // 不是 Tauri pid，监控错了对象，孤儿进程问题就无法根治）
+            sidecar_env.push((
+                "KNOWLEDGE_MAP_PARENT_PID".to_string(),
+                std::process::id().to_string(),
+            ));
 
             let sidecar_path = resolve_sidecar("knowledge-map-backend");
-            eprintln!("[tauri] launching sidecar: {:?}", sidecar_path);
+            log_line(format!("[tauri] launching sidecar: {:?}", sidecar_path));
+            log_line(format!(
+                "[tauri] KNOWLEDGE_MAP_DATA_DIR={:?}",
+                sidecar_env
+                    .iter()
+                    .find(|(k, _)| k == "KNOWLEDGE_MAP_DATA_DIR")
+                    .map(|(_, v)| v.as_str())
+                    .unwrap_or("(unset)")
+            ));
 
             let mut cmd = Command::new(&sidecar_path);
-            cmd.stdout(Stdio::piped()).stderr(Stdio::piped());
+            cmd.stdin(Stdio::null())
+                .stdout(Stdio::piped())
+                .stderr(Stdio::piped());
+            // 关键：Tauri 主进程是 windows_subsystem="windows"，没 console。
+            // 如果不设 CREATE_NO_WINDOW，Windows 会给 sidecar（console 子系统）
+            // 创建一个新 console，新 console 的 stdio 会接管 Rust 设的 pipe，
+            // 导致 Rust 读不到任何 sidecar 输出。CREATE_NO_WINDOW 让 sidecar
+            // 完全用 Rust pipe 作为 stdio，不创建新 console。
+            #[cfg(target_os = "windows")]
+            cmd.creation_flags(CREATE_NO_WINDOW);
             for (k, v) in &sidecar_env {
                 cmd.env(k, v);
             }
 
-            let mut child = cmd.spawn().expect("failed to spawn backend sidecar");
+            let child = match cmd.spawn() {
+                Ok(c) => c,
+                Err(e) => {
+                    log_line(format!("[tauri] FATAL: failed to spawn sidecar: {}", e));
+                    panic!("failed to spawn backend sidecar: {}", e);
+                }
+            };
+            let child_pid = child.id();
+            log_line(format!("[tauri] sidecar spawned, pid={}", child_pid));
+
+            // 立即把 sidecar 加入 KillOnJobClose 的 Job Object。
+            // PyInstaller onefile boot loader 会很快 fork Python 子进程，
+            // 趁早 assign 才能让 Python 子进程也继承 job 归属。
+            // 即使 Tauri 主进程异常退出（崩溃/强杀），Windows 内核也会
+            // 自动级联 kill job 内全部进程，根治 python.exe 孤儿问题。
+            #[cfg(target_os = "windows")]
+            {
+                match win_job::assign_to_kill_on_close_job(&child) {
+                    Ok(()) => log_line("[tauri] sidecar assigned to kill-on-close job"),
+                    Err(e) => log_line(format!(
+                        "[tauri] WARN: failed to assign sidecar to job \
+                         (orphan-process protection degraded, falling back to Python watchdog): {}",
+                        e
+                    )),
+                }
+            }
+
+            let mut child = child;
             let child_stdout = child.stdout.take().expect("no stdout");
             let child_stderr = child.stderr.take().expect("no stderr");
 
@@ -234,6 +439,7 @@ fn main() {
 
             tauri::async_runtime::spawn(async move {
                 let mut heard_listening: Option<String> = None;
+                log_line("[tauri] stdout/stderr listener task started");
                 for event in rx {
                     match event {
                         SidecarEvent::Stdout(line) => {
@@ -241,9 +447,10 @@ fn main() {
                             if trimmed.is_empty() {
                                 continue;
                             }
-                            eprintln!("[backend] {}", trimmed);
+                            log_line(format!("[backend stdout] {}", trimmed));
                             if let Some(url) = trimmed.strip_prefix(LISTENING_TAG) {
                                 let url = url.trim();
+                                log_line(format!("[tauri] received LISTENING_ON: {}", url));
                                 if heard_listening.is_none() {
                                     heard_listening = Some(url.to_string());
                                     if let Ok(mut slot) = base_url_arc.lock() {
@@ -253,24 +460,31 @@ fn main() {
                                     let win_clone = window_for_ready.clone();
                                     let base_arc = base_url_arc.clone();
                                     std::thread::spawn(move || {
+                                        log_line(format!(
+                                            "[tauri] starting health check at {}",
+                                            url_for_health
+                                        ));
                                         let ok = wait_for_health(
                                             &url_for_health,
                                             Duration::from_secs(BACKEND_READY_TIMEOUT_SECS),
                                         );
                                         if ok {
+                                            log_line(format!(
+                                                "[tauri] health check passed, injecting API url"
+                                            ));
                                             inject_api_url(&win_clone, &url_for_health);
                                             if let Ok(mut slot) = base_arc.lock() {
                                                 *slot = Some(url_for_health.clone());
                                             }
-                                            eprintln!(
+                                            log_line(format!(
                                                 "[tauri] backend ready at {}",
                                                 url_for_health
-                                            );
+                                            ));
                                         } else {
-                                            eprintln!(
-                                                "[tauri] backend health check timed out at {}",
+                                            log_line(format!(
+                                                "[tauri] health check timed out at {}",
                                                 url_for_health
-                                            );
+                                            ));
                                             let msg = format!(
                                                 "后端在 {} 秒内未就绪，请检查日志或重启应用。",
                                                 BACKEND_READY_TIMEOUT_SECS
@@ -280,21 +494,24 @@ fn main() {
                                     });
                                 }
                             } else if let Some(msg) = trimmed.strip_prefix(ERROR_TAG) {
-                                eprintln!("[backend error] {}", msg.trim());
+                                log_line(format!("[backend ERROR tag] {}", msg.trim()));
                             }
                         }
                         SidecarEvent::Stderr(line) => {
-                            eprint!("[backend stderr] {}", line);
+                            log_line(format!("[backend stderr] {}", line));
                         }
                     }
                 }
+                log_line("[tauri] stdout/stderr listener task ended (sidecar exited?)");
             });
 
             // sidecar 还在启动期间，先在页面上显示"正在连接后端"提示；
             // 健康检查通过后 inject_api_url 会自动移除该 banner。
             // 不再注入兜底 url——sidecar 实际端口可能是 8001/8002/8003，
             // 兜底到 8000 会让前端在启动窗口期打到错误地址。
+            log_line("[tauri] injecting connecting banner");
             inject_connecting_banner(&window);
+            log_line("[tauri] setup complete");
 
             Ok(())
         })

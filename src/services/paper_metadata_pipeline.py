@@ -12,7 +12,7 @@ from src.services.external_paper_lookup import (
     merge_citations,
     parse_reference_hint,
 )
-from src.services.metadata_extractor import extract_metadata
+from src.services.metadata_extractor import extract_metadata, extract_references_text
 
 
 async def build_verified_metadata(raw_text: str, reference_hint: str | None = None) -> dict[str, Any]:
@@ -78,8 +78,79 @@ async def _finalize_metadata(
 
     reconciled["source_candidates"] = [local_metadata["source_candidates"][0], *remote_candidates]
     remote_citations = _pick_remote_citations(reconciled, remote_candidates)
-    reconciled["citations"] = merge_citations(local_metadata.get("citations", []), remote_citations)
+    local_citations = local_metadata.get("citations", [])
+    # 在 PDF 模式下用 LLM 从 References 原文再提取一版结构化引用，
+    # 与本地正则 + 联网候选合并去重，作为关系图引用边的最可靠来源
+    if allow_llm:
+        llm_citations = await _extract_citations_with_llm(raw_text)
+    else:
+        llm_citations = []
+    reconciled["citations"] = merge_citations(local_citations, merge_citations(llm_citations, remote_citations))
     return reconciled
+
+
+async def _extract_citations_with_llm(raw_text: str) -> list[dict[str, Any]]:
+    """用 LLM 从 PDF 的 References 段落提取结构化引用列表。
+
+    本地正则对各种引用格式（IEEE / ACM / Nature / 中文 GB/T 7714）容易切错标题或作者，
+    而关系图完全依赖引用标题匹配，因此这里花一次 LLM 调用换取更准确的引用标题。
+    References 段落缺失或 LLM 失败时返回空列表（调用方会继续用本地+联网结果兜底）。
+    """
+    references_text = extract_references_text(raw_text)
+    if not references_text:
+        return []
+    # 控制 LLM 输入体积；正则路径不受影响（它在 _extract_citations 里处理完整文本）
+    references_text = references_text[:12000]
+    llm = UnifiedLLMProvider()
+    max_items = int(get_env("PAPER_LLM_CITATION_MAX", 40) or 40)
+    payload = {
+        "task": "从论文的参考文献原文中提取结构化引用列表，每条引用必须有 title（论文/书籍标题）。",
+        "rules": [
+            "只提取参考文献条目，不要把正文句子当作引用。",
+            "title 用条目中被引用的论文/书籍标题，去掉期刊名、会议名、页码、DOI。",
+            "找不到明确标题的条目直接跳过，不要编造。",
+            "authors 取作者全名列表，找不到则为空数组。",
+            "year 取发表年份（整数），找不到则为 null。",
+            f"最多返回 {max_items} 条，按原文顺序排列。",
+        ],
+        "output_schema": {
+            "citations": [
+                {
+                    "title": "string（必填）",
+                    "authors": ["string"],
+                    "year": "int|null",
+                }
+            ]
+        },
+        "references_text": references_text,
+    }
+    try:
+        result = await llm.complete_json(
+            system_prompt=(
+                "你是一名严谨的参考文献解析助手。"
+                "只返回 JSON 对象，不要解释。"
+                "从杂乱的参考文献原文里准确切出每条引用的论文标题、作者和年份。"
+            ),
+            user_prompt=json.dumps(payload, ensure_ascii=False),
+            trace_label="source_agent.citation_extract",
+            max_retries=1,
+        )
+    except Exception:
+        return []
+
+    items = result.get("citations") if isinstance(result, dict) else None
+    if not isinstance(items, list):
+        return []
+    normalized = [
+        {
+            "title": str(item.get("title") or "").strip(),
+            "authors": [str(a).strip() for a in item.get("authors", []) if str(a).strip()],
+            "year": item.get("year") if isinstance(item.get("year"), int) else None,
+        }
+        for item in items
+        if isinstance(item, dict) and str(item.get("title") or "").strip()
+    ]
+    return normalized[:max_items]
 
 
 async def _reconcile_with_llm(

@@ -24,7 +24,7 @@ async def analyze_innovation(title: str, abstract: str, raw_text: str) -> dict:
 
 标题：{title}
 摘要：{abstract}
-正文片段：{raw_text[:12000]}
+正文片段：{raw_text[:]}
 """.strip(),
         trace_label="innovation_agent",
         max_retries=1,

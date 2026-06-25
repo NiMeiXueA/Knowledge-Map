@@ -17,6 +17,35 @@ def build_paper_short(title: str, abstract: str = "", raw_text: str = "") -> str
     return _truncate_title(cleaned_title)
 
 
+def normalize_short(value: object, fallback: str = "") -> str:
+    """归一化 AI 返回的论文缩写（short）。
+
+    AI 在分类时一并给出的缩写质量最高，但需要做防御性清洗：
+    去掉首尾标点/引号/空白、合并多余空白、去掉换行、限制长度 2-24 字符。
+    清洗后过短或过长则回退到 fallback（通常是启发式 build_paper_short 的结果）。
+    """
+    text = str(value or "").strip()
+    if not text:
+        return fallback
+    text = re.sub(r"\s+", " ", text)
+    text = re.sub(r"[\r\n]+", " ", text)
+    text = re.sub(r'^["“”\'`\-:;,. ]+|["“”\'`\-:;,. ]+$', "", text).strip()
+    text = text.split("。")[0].strip()
+    if len(text) < 2:
+        return fallback
+    if len(text) > 24:
+        # 超长时按词截断，避免生硬切断单词；仍超长再硬截断
+        words = text.split()
+        truncated = ""
+        for word in words:
+            candidate = f"{truncated} {word}".strip()
+            if len(candidate) > 24:
+                break
+            truncated = candidate
+        text = truncated or text[:24]
+    return text or fallback
+
+
 def normalize_idea_text(value: object) -> str:
     text = str(value or "").strip()
     if not text:
