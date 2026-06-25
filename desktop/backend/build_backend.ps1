@@ -27,7 +27,12 @@ if (-not (Test-Path $binariesDir)) {
 }
 
 # ---------- 3. Python & PyInstaller ----------
-$python = (Get-Command python -ErrorAction SilentlyContinue).Source
+# 优先用 BUILD_PYTHON 指定的解释器（指向 setup_clean_env.ps1 建的干净 venv，体积最小）；
+# 否则回退到 PATH 里的 python / py。
+$python = $env:BUILD_PYTHON
+if (-not $python) {
+    $python = (Get-Command python -ErrorAction SilentlyContinue).Source
+}
 if (-not $python) {
     $python = (Get-Command py -ErrorAction SilentlyContinue).Source
 }
@@ -35,10 +40,19 @@ if (-not $python) {
     throw "未找到 Python 可执行文件（python / py）。请确保 Python 已安装并加入 PATH。"
 }
 Write-Host "build >> python: $python"
+if (-not $env:BUILD_PYTHON) {
+    Write-Host "build >> 提示：未设置 BUILD_PYTHON，正在用全局 Python。为减小体积建议先用 scripts/setup_clean_env.ps1 建干净 venv，再 `$env:BUILD_PYTHON=...\python.exe" -ForegroundColor Yellow
+}
 
-& $python -m pip install --upgrade pip | Out-Null
-& $python -m pip install -r requirements.txt | Out-Null
-& $python -m pip install pyinstaller | Out-Null
+# 干净 venv 已含依赖；全局环境下才需要联网装依赖，避免在 CI 之外被全局环境污染
+if (-not $env:BUILD_PYTHON) {
+    & $python -m pip install --upgrade pip | Out-Null
+    & $python -m pip install -r requirements.txt | Out-Null
+    & $python -m pip install pyinstaller | Out-Null
+} else {
+    # 干净环境里 pyinstaller 可能缺（用户只装了 requirements），补装一次
+    & $python -m pip install pyinstaller --quiet | Out-Null
+}
 
 # ---------- 4. 目标文件名（Tauri sidecar 命名约定） ----------
 $targetTriple = if ($env:TARGET_TRIPLE) { $env:TARGET_TRIPLE } else { "x86_64-pc-windows-msvc" }
@@ -52,6 +66,7 @@ if (Test-Path $workDir) { Remove-Item -Recurse -Force $workDir }
 
 # ---------- 5. 隐式依赖（PyInstaller 无法静态分析） ----------
 # 这些是 LangGraph / pydantic / PyMuPDF / pytesseract 等常见容易漏掉的模块
+# 注意：不要加 PIL._tkinter_finder——那是给 GUI 的 ImageTk 用的，会白白拉入 tkinter。
 $hiddenImports = @(
     "uvicorn.logging",
     "uvicorn.loops",
@@ -73,7 +88,6 @@ $hiddenImports = @(
     "pymupdf",
     "pypdf",
     "PIL",
-    "PIL._tkinter_finder",
     "pytesseract",
     "redis",
     "redis.connection",
@@ -90,6 +104,31 @@ $hiddenArgs = @()
 foreach ($mod in $hiddenImports) {
     $hiddenArgs += "--hidden-import"
     $hiddenArgs += $mod
+}
+
+# ---------- 5.1 显式排除（减小体积） ----------
+# 这些模块后端运行时绝不会用到，但脏环境里可能被 PyInstaller 误判并打包进来。
+# 若未来真的引入了某个依赖（例如用 matplotlib 画图），记得从下面移除对应项。
+$excludeModules = @(
+    "tkinter",
+    "_tkinter",
+    "PIL._tkinter_finder",
+    "pytest",
+    "_pytest",
+    "sphinx",
+    "IPython",
+    "notebook",
+    "jupyter",
+    "matplotlib"
+)
+if ($env:PYINSTALLER_EXCLUDE_MODULES) {
+    $excludeModules += $env:PYINSTALLER_EXCLUDE_MODULES.Split(",") | ForEach-Object { $_.Trim() } | Where-Object { $_ }
+}
+$excludeModules = @($excludeModules | Select-Object -Unique)
+$excludeArgs = @()
+foreach ($mod in $excludeModules) {
+    $excludeArgs += "--exclude-module"
+    $excludeArgs += $mod
 }
 
 # ---------- 6. 调用 PyInstaller ----------
@@ -120,7 +159,7 @@ $pyinstallerArgs = @(
     "--paths", ".",
     "--workpath", $workDir,
     "--distpath", $distDir
-) + $addDataArgs + $hiddenArgs + $collectArgs + @($entry)
+) + $addDataArgs + $hiddenArgs + $excludeArgs + $collectArgs + @($entry)
 
 Write-Host "build >> running PyInstaller..." -ForegroundColor Cyan
 & $python -m PyInstaller @pyinstallerArgs

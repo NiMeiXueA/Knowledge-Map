@@ -29,18 +29,20 @@ from src.services.paper_graph_builder import build_graph_payload
 app = FastAPI(title="Knowledge Map API")
 
 # 配置CORS中间件，允许前端跨域访问
-# - http://localhost:\d+   开发模式（Vite 5173 / 8000 等）
-# - http://127.0.0.1:\d+   桌面模式或本地直连
-# - tauri://localhost      macOS / Linux Tauri WebView 的 origin
-# - http://tauri.localhost  Windows Tauri WebView 的 origin
+# - http://localhost:\d+     开发模式（Vite 5173 / 8000 等）
+# - http://127.0.0.1:\d+     桌面模式或本地直连
+# - tauri://localhost        macOS / Linux Tauri WebView 的 origin
+# - http://tauri.localhost    Tauri 1.5- WebView2 origin（HTTP）
+# - https://tauri.localhost   Tauri 1.6+ WebView2 origin（HTTPS）  ← 关键，缺这条会被 CORS 拦截
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:5173",
         "tauri://localhost",
         "http://tauri.localhost",
+        "https://tauri.localhost",
     ],
-    allow_origin_regex=r"http://(localhost|127\.0\.0\.1):\d+",
+    allow_origin_regex=r"https?://(localhost|127\.0\.0\.1)(:\d+)?",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

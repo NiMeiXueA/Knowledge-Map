@@ -52,10 +52,10 @@ export function KnowledgeMapPage({ data, refresh }: Props) {
             </Link>
           </div>
           <section className="hero-main">
-            <p className="eyebrow">Federated Learning Research Atlas</p>
-            <h1>联邦学习论文技术路线图</h1>
+            <p className="eyebrow">Paper Research Roadmap</p>
+            <h1>论文技术路线图</h1>
             <p className="hero-copy">
-              从基础优化到个性化、蒸馏、图联邦、生成式联邦、提示学习与系统部署，按大类、年份和创新点查看你的论文集合。
+              上传任意研究方向的论文，自动按贡献类型、年份和创新点梳理成技术发展脉络，构建你自己的论文知识地图。
             </p>
             <div className="hero-stats">
               <span className="stat-pill">论文总数：{stats.total}</span>

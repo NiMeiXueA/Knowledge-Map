@@ -38,13 +38,11 @@ type PanState = {
 const VIEW_WIDTH = 1120;
 const VIEW_HEIGHT = 680;
 const categoryColors: Record<string, string> = {
-  optimization: "#a43d2f",
-  personalization: "#0f766e",
-  distillation: "#ca8a04",
-  graph: "#2563eb",
-  generative: "#7c3aed",
-  prompt: "#be185d",
-  system: "#0f766e",
+  core_method: "#a43d2f",
+  improvement: "#0f766e",
+  theory: "#2563eb",
+  application: "#7c3aed",
+  benchmark: "#ca8a04",
   survey: "#475569",
   other: "#8b5e3c"
 };
@@ -78,7 +76,8 @@ function clamp(value: number, min: number, max: number) {
 }
 
 function isCoreLink(type: string) {
-  return type === "same_category_evolution" || type === "core";
+  // 关系图的边现在只来自真实引用（citation），全部视为主线边
+  return type === "citation" || type === "same_category_evolution" || type === "core";
 }
 
 function getDirectedLink(link: GraphPayload["links"][number], paperMap: Map<string, Paper>) {

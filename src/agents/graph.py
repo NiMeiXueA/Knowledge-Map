@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import TypedDict
@@ -17,7 +18,7 @@ from src.database.kv import KVRepository
 from src.llm.provider import LLMJSONParseError
 from src.schemas import PaperModel
 from src.services.metadata_extractor import extract_metadata
-from src.services.paper_record_cleaner import build_paper_short, normalize_idea_text
+from src.services.paper_record_cleaner import build_paper_short, normalize_idea_text, normalize_short
 from src.services.paper_file_manager import ensure_unique_paper_id, move_pdf_to_category, slugify_paper_id
 from src.services.paper_graph_builder import sync_relationships_into_papers
 from src.services.pdf_loader import extract_pdf_text
@@ -47,6 +48,7 @@ class PaperAnalysisState(TypedDict, total=False):
     category_id: str  # 分类ID
     category_name: str  # 分类名称
     target_folder: str  # 目标文件夹
+    short: str  # 论文缩写/简称（由分类 Agent 一并产出）
     
     # 分析结果
     summary: str  # 论文总结
@@ -218,8 +220,27 @@ def _normalize_limitation_points(value: object) -> list[dict]:
     return [item for item in normalized if item["point"]]
 
 
+def _normalize_venue_for_display(venue: object, year: object) -> str | None:
+    """venue 展示规范化：若 venue 不含年份且 year 已知，补上年份（如 AISTATS → AISTATS 2017）。
+
+    解决会议/期刊名只返回简称（Semantic Scholar 常返回 "AISTATS"、"NeurIPS" 这类裸简称）
+    时展示信息不全的问题；已含 19xx/20xx 年份的 venue 保持原样。
+    """
+    if not venue:
+        return None
+    venue_text = str(venue).strip()
+    if not venue_text:
+        return None
+    if re.search(r"(?:19|20)\d{2}", venue_text):
+        return venue_text
+    if isinstance(year, int) and 1900 <= year <= 2100:
+        return f"{venue_text} {year}"
+    return venue_text
+
+
 def _normalize_state_for_save(state: PaperAnalysisState) -> PaperAnalysisState:
     """在保存前标准化状态中的所有字段"""
+    state["venue"] = _normalize_venue_for_display(state.get("venue"), state.get("year"))
     state["summary"] = _stringify(state.get("summary"))
     state["idea"] = normalize_idea_text(_stringify(state.get("idea")))
     state["innovation"] = _stringify(state.get("innovation"))
@@ -360,6 +381,8 @@ async def classify_paper_node(state: PaperAnalysisState) -> PaperAnalysisState:
     state["category_id"] = matched.id if matched else category_id
     state["category_name"] = matched.name if matched else result.get("category_name", "")
     state["target_folder"] = matched.folder if matched else ""
+    # 分类 Agent 一并给出论文缩写；未给出时留空，保存节点会回退到启发式 build_paper_short
+    state["short"] = str(result.get("short") or "").strip()
     return state
 
 
@@ -445,13 +468,15 @@ async def save_final_json_node(state: PaperAnalysisState) -> PaperAnalysisState:
     now = datetime.now(timezone.utc)
     
     # 创建PaperModel对象
+    # short 优先取分类 Agent 给出的 AI 缩写（更准），清洗失败再回退到启发式规则
+    heuristic_short = build_paper_short(
+        state.get("title", state["paper_id"]),
+        state.get("abstract", ""),
+        state.get("raw_text", ""),
+    )
     paper = PaperModel(
         id=state["paper_id"],
-        short=build_paper_short(
-            state.get("title", state["paper_id"]),
-            state.get("abstract", ""),
-            state.get("raw_text", ""),
-        ),
+        short=normalize_short(state.get("short"), fallback=heuristic_short),
         title=state.get("title", state["paper_id"]),  # 论文标题
         year=state.get("year"),
         authors=state.get("authors", []),

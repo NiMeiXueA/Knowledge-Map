@@ -1,4 +1,4 @@
-import { API_BASE_URL } from "./config";
+import { resolveApiBaseUrl } from "./config";
 import type {
   Category,
   CategoryPayload,
@@ -13,7 +13,8 @@ import type {
 } from "../types/paper";
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(`${API_BASE_URL}${path}`, init);
+  const baseUrl = resolveApiBaseUrl();
+  const response = await fetch(`${baseUrl}${path}`, init);
   if (!response.ok) {
     const detail = await response.text();
     throw new Error(detail || `Request failed: ${response.status}`);

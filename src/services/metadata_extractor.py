@@ -210,7 +210,6 @@ def _looks_like_person_name(value: str) -> bool:
             "theoretically",
             "practically",
             "demonstrate",
-            "federated learning",
             "significant",
             "heterogeneity",
         ]
@@ -267,19 +266,18 @@ def _extract_abstract(raw_text: str) -> str:
 def _extract_citations(raw_text: str) -> list[dict]:
     """
     从PDF原始文本中提取引用列表
-    
+
     查找"references"部分，然后分割和解析每个引用项
-    
+
     Args:
         raw_text: PDF原始文本
-        
+
     Returns:
         引用项列表（最多40个）
     """
-    refs_match = re.search(r"(?is)\b(references|bibliography)\b(.+)$", raw_text)
-    if not refs_match:
+    references_text = extract_references_text(raw_text)
+    if not references_text:
         return []
-    references_text = refs_match.group(2).strip()
     chunks = _split_reference_chunks(references_text)
     citations: list[CitationItem] = []
     for chunk in chunks[:40]:
@@ -287,6 +285,21 @@ def _extract_citations(raw_text: str) -> list[dict]:
         if citation:
             citations.append(citation)
     return _deduplicate_citations([item.model_dump() for item in citations])
+
+
+def extract_references_text(raw_text: str) -> str:
+    """从 PDF 原始文本中截取 References / Bibliography 段落（完整、不截断）。
+
+    正则引用提取（_extract_citations）和 LLM 引用提取都复用它。
+    LLM 路径自行在外层做长度截断以控制输入体积。
+    找不到该段落时返回空串。
+    """
+    if not raw_text:
+        return ""
+    refs_match = re.search(r"(?is)\b(references|bibliography)\b(.+)$", raw_text)
+    if not refs_match:
+        return ""
+    return refs_match.group(2).strip()
 
 
 def _split_reference_chunks(references_text: str) -> list[str]:

@@ -449,16 +449,15 @@ def _filter_low_quality_candidates(
 
 
 def _candidate_looks_like_reference_target(local_metadata: dict[str, Any], candidate: dict[str, Any]) -> bool:
+    """识别候选是否其实是“被引论文”却被误当成正本——标题相似度过低却仍被纳入候选时降权。"""
     local_title = str(local_metadata.get("title") or "").lower()
     candidate_title = str(candidate.get("title") or "").lower()
     if not local_title or not candidate_title:
         return False
-    if "contrastive federated learning" in candidate_title and "effect of hyper-parameters" in local_title:
-        return True
     if candidate_title in local_title or local_title in candidate_title:
         return False
     similarity = SequenceMatcher(None, local_title, candidate_title).ratio()
-    return similarity < 0.7 and "model-contrastive federated learning" in candidate_title
+    return similarity < 0.6
 
 
 def _extract_crossref_year(item: dict[str, Any]) -> int | None:

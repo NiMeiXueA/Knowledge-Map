@@ -1,5 +1,13 @@
+# Knowledge Map 后端依赖（刻意保持精简，减小 PyInstaller 打包体积）
+#
+# 体积优化原则：
+# - 不装任何运行时用不到的库；如需新增，先确认是否真的被 import。
+# - uvicorn 用裸包（不带 [standard]）：桌面模式不开 reload、不用 WebSocket，
+#   因此省掉 uvloop / httptools / watchfiles / websockets 等附带依赖。
+# - OCR 是可选能力（受 OCR_ENABLED 控制）；若完全不需要 OCR，可删掉下面两行
+#   pillow / pytesseract（pytesseract 会自动把 pillow 作为依赖装上）。
 fastapi>=0.115.0
-uvicorn[standard]>=0.30.0
+uvicorn>=0.30.0
 pydantic>=2.8.0
 python-dotenv>=1.0.1
 redis>=5.0.7

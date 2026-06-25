@@ -109,7 +109,9 @@ score = 0.45 * title_similarity(SequenceMatcher)
       - cited_penalty  (疑似被引论文 -0.18)
 ```
 
-特殊坑：`_candidate_looks_like_reference_target` 专门识别 "model-contrastive federated learning" 这类**被引论文被错误识别为正本**的情况，会扣 0.18 分。修改评分逻辑时不要破坏这个保护。
+特殊坑：`_candidate_looks_like_reference_target` 识别**被引论文被错误识别为正本**的情况，会扣 0.18 分。修改评分逻辑时不要破坏这个保护。
+
+**引用提取（关系图命脉）**：关系图只由引用构建，所以引用必须准。`_finalize_metadata` 在 PDF 模式（`allow_llm=True`）下额外调一次 `_extract_citations_with_llm`——把 `metadata_extractor.extract_references_text` 截出的 References 原文（≤12000 字符）交给 LLM（`trace_label=source_agent.citation_extract`）切出结构化 `title/authors/year`，再与本地正则 + 联网候选用 `merge_citations` 三层合并去重。LLM 失败 / References 缺失时返回空，自动回退到本地+联网结果。`reference` 纯输入模式（`allow_llm=False`）跳过此步。修改引用相关逻辑时，确保 `_extract_citations_with_llm` 产出的 title 与 `paper_graph_builder._title_variants` 的归一化对齐，否则边连不上。
 
 ### PDF 解析四级降级
 
@@ -135,18 +137,19 @@ score = 0.45 * title_similarity(SequenceMatcher)
 - `ensure_unique_paper_id`：冲突时追加 `-2` / `-3`（注意 graph.py 调用时传入了 `existing_ids - {self}` 避免把自己当冲突）
 - `move_pdf_to_category(source, folder, paper_id)`：移到 `paper/{folder}/{paper_id}.pdf`，文件名只保留 `[A-Za-z0-9一-鿿._-]`，其他替换为 `_`，文件已存在时追加 `-2.pdf`
 
-`paper/short` 字段（图谱节点显示名）由 `paper_record_cleaner.build_paper_short` 生成，优先级：括号显式缩写 `(FedAvg)` → `called XXX` 模式 → 标题首字母缩写（3-10 字母，需在原文出现 ≥ 2 次）→ 截断到 5 词 48 字符。
+`paper/short` 字段（图谱节点显示名）**优先由分类 Agent 在 `classify_paper` 时一并产出**（LLM 已读标题/摘要/正文，取学界常用缩写最准，如 BERT / FedAvg）。提示词约束长度 2-24 字符，`graph.py::save_final_json_node` 用 `paper_record_cleaner.normalize_short` 做清洗（去引号/句号、限长），清洗失败或 Agent 未给时**回退**到启发式 `build_paper_short`：括号显式缩写 `(BERT)` → `called XXX` 模式 → 标题首字母缩写（3-10 字母，需在原文出现 ≥ 2 次）→ 截断到 5 词 48 字符。修改 `classify_agent.py` 提示词时不要丢掉 `short` 输出字段。
 
 ### 关系图构建
 
-`src/services/paper_graph_builder.py` 生成两类边：
+`src/services/paper_graph_builder.py` **只生成引用边**（不再人为串联同分类论文）：
 
-- **`same_category_evolution`**：同分类论文按 `(year ASC, short.lower())` 排序，**只连相邻**论文（不跨年跳跃），表达时间演进
-- **`citation`**：论文 `citations` 列表中的标题能匹配到现有论文标题时，连 `被引论文 → 引用方` 的边
+- **`citation`**：论文 `citations` 列表中的标题（经 `_title_variants` 归一化：小写 + 去尾标点 + 合并空白）能匹配到库内已有论文标题时，连 `被引论文 → 引用方` 的边；匹配命中自己则跳过。
+
+没有真实引用关系的论文之间不出现任何边。因此**引用提取的准确性直接决定关系图质量**——见下文「元数据校验」中的 LLM 引用提取。
 
 边按 `(source, target, type)` 去重。`sync_relationships_into_papers` 把关系反向写回 papers.json，存到每篇论文的 `relationships` 字段（注意：analysis JSON 里**不存 relationships**，只在 papers.json 主索引中维护）。
 
-前端 `PaperNetworkGraph.tsx`（SVG, viewBox 1120×680）会再次按论文年份调整边的方向（早 → 晚），并支持节点拖拽 / 画布平移 / 分类筛选 / 分类配色（9 个分类有固定颜色映射）。
+前端 `PaperNetworkGraph.tsx`（SVG, viewBox 1120×680）会再次按论文年份调整边的方向（早 → 晚），并支持节点拖拽 / 画布平移 / 分类筛选 / 分类配色（9 个分类有固定颜色映射）。`isCoreLink` 把 `citation` 视为主线边。
 
 ### JSON 存储约定
 
@@ -172,15 +175,31 @@ score = 0.45 * title_similarity(SequenceMatcher)
 
 前端类型定义在 `front/src/types/paper.ts`，与后端 `src/schemas.py` 一一对应。
 
-### 领域适配（联邦学习 → 其他领域）
+### 自定义分类
 
-仓库默认配置为**联邦学习**领域。切换领域需要改两处：
+仓库默认提供一套**面向任意领域的通用分类**（核心方法 / 改进与扩展 / 理论与分析 / 应用与系统 / 数据与评测 / 综述与展望 / 其他），按“研究贡献类型”而非具体领域划分。改成自己研究方向的分类只需改一处：
 1. `src/config.py` 的 `CATEGORY_DEFINITIONS`（id / name / folder / why / advantages / disadvantages）
-2. `src/agents/classify_agent.py` 第 14 行的系统提示词（"你是联邦学习论文分类助手"）
 
-`paper/` 下的分类文件夹会在启动时由 `ensure_runtime_dirs()` 按 `folder` 字段自动创建。前端 `PaperNetworkGraph.tsx` 里的 `categoryColors` 颜色映射是按分类 ID 硬编码的，新增分类需要补颜色，否则节点会无色。
+`src/agents/classify_agent.py` 的分类提示词已是通用的“论文分类助手”，会严格按 `CATEGORY_DEFINITIONS` 归类，无需随领域改动。`paper/` 下的分类文件夹会在启动时由 `ensure_runtime_dirs()` 按 `folder` 字段自动创建。前端 `PaperNetworkGraph.tsx` 里的 `categoryColors` 覆盖了默认分类 ID；新增分类若不在映射里会走 `FALLBACK_PALETTE` 按 hash 取色兜底（不会无色）。
 
 ## 打包排障
+
+### 体积控制（重要）
+
+sidecar exe 体积直接由「打包用的 Python 环境」决定——在装了一堆无关库的全局环境里跑 PyInstaller，numpy/pandas/matplotlib/pytest 等会被一起打进去，exe 轻松上百 MB。正确做法：**只在干净 venv 里打包**。
+
+```powershell
+# 1. 建干净虚拟环境（只装 requirements.txt + pyinstaller）
+powershell -ExecutionPolicy Bypass -File scripts/setup_clean_env.ps1
+
+# 2. 让 build_backend.ps1 用这个环境打包
+$env:BUILD_PYTHON = ".\.venv-build\Scripts\python.exe"
+powershell -ExecutionPolicy Bypass -File desktop/backend/build_backend.ps1
+```
+
+`requirements.txt` 刻意保持精简（无 uvloop/httptools/websockets/watchfiles——桌面模式用裸 `uvicorn`，不开 reload、不用 WebSocket）。`build_backend.ps1` 还预设了 `--exclude-module`（tkinter / pytest / sphinx / matplotlib / IPython / jupyter 等），即便环境略脏也兜底排除。`PIL._tkinter_finder` 不要加回 hidden imports——它会把 tkinter 拉进来。若未来真引入了被排除的库（例如用 matplotlib 画图），记得同步从 `excludeModules` 移除。
+
+### hidden imports
 
 PyInstaller 容易漏 hidden imports，`desktop/backend/build_backend.ps1` 已预设 `langgraph / pydantic / fastapi / uvicorn / redis` 的 `--collect-submodules`。新增 Python 依赖后报 `ModuleNotFoundError` 时，用环境变量追加：
 
